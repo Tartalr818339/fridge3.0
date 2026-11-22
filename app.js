@@ -25,6 +25,8 @@
   const tabEl = $('#app-tabbar');
   const modalRoot = $('#modal-root');
   const toastRoot = $('#toast-root');
+  const scrollRail = $('#scroll-rail');
+  const scrollCue = $('#scroll-cue');
 
   // 分区图标用 SVG，避免 emoji 在某些设备渲染成方框
   function layerIcon(layer) {
@@ -137,11 +139,29 @@
     const back = page === 'home' ? '' : `<button class="tb-back" data-go="home">‹ 首页</button>`;
     topbarEl.innerHTML = `${back}<div class="tb-title">${PAGE_TITLES[page] || '鲜知'}</div>
       <button class="tb-status" data-go="fridge"><span class="tb-dot${urgent ? ' warn' : ''}"></span>${ITEMS.length} 件食材${urgent ? ` · ${urgent} 件快到期` : ''}</button>
-      <button class="tb-setting" data-action="settings-open" aria-label="设置">${ICON.gear}</button>`;
+      <button class="tb-guide" data-action="tour-restart" aria-label="重新查看新手教程">🧭<span>教程</span></button>`;
+  }
+
+  function updateScrollHint() {
+    if (!scrollRail || !scrollCue) return;
+    const max = Math.max(0, appEl.scrollHeight - appEl.clientHeight);
+    const scrollable = max > 12;
+    scrollRail.classList.toggle('active', scrollable);
+    if (!scrollable) {
+      scrollCue.classList.add('hidden');
+      return;
+    }
+    const thumb = scrollRail.firstElementChild;
+    const thumbPct = Math.max(12, Math.min(60, appEl.clientHeight / appEl.scrollHeight * 100));
+    thumb.style.height = `${thumbPct}%`;
+    thumb.style.top = `${(appEl.scrollTop / max) * (100 - thumbPct)}%`;
+    scrollCue.textContent = STATE.appPage === 'home' ? '下滑查看冰箱分区 ↓' : '下滑查看更多 ↓';
+    scrollCue.classList.toggle('hidden', appEl.scrollTop > 36 || appEl.scrollTop >= max - 8);
   }
 
   appEl.addEventListener('scroll', () => {
     topbarEl.classList.toggle('scrolled', appEl.scrollTop > 8);
+    updateScrollHint();
   });
 
   function renderApp() {
@@ -173,6 +193,7 @@
     };
     if (pageChanged && document.startViewTransition) document.startViewTransition(commit);
     else commit();
+    requestAnimationFrame(updateScrollHint);
 
     if (page === 'fridge' && STATE.focusLayer) {
       const layer = STATE.focusLayer;
@@ -365,6 +386,7 @@
           <div class="grow"><div style="font-size:13px;font-weight:700">${esc(r.name)}</div>
             <div class="muted" style="margin-top:3px">⏱ ${r.minutes} 分钟 · ${r.ingredients.filter(x=>x.have).length}/${r.ingredients.length} 食材已有</div>
             ${r.expiring.length ? `<span class="pill-tag yellow" style="margin-top:5px;display:inline-block">能用掉快到期食材：${r.expiring.map(esc).join('、')}</span>` : ''}
+            ${r.video ? '<span class="video-mini">▶ 视频教程</span>' : ''}
           </div><span style="color:var(--muted)">›</span>
         </div></button>`).join('')}`;
   }
@@ -383,7 +405,13 @@
         </div>`).join('')}</div>
       ${r.ingredients.some(x => !x.have) ? `<button class="btn btn-primary btn-block" data-add-missing="${r.id}" style="margin-top:12px">把缺的食材加入补货清单</button>` : ''}
       <div class="sec-title">做法步骤</div>
-      <div class="card">${r.steps.map((s, i) => `<div class="step-item"><span class="step-num">${i+1}</span><span>${esc(s)}</span></div>`).join('')}</div>`;
+      <div class="card">${r.steps.map((s, i) => `<div class="step-item"><span class="step-num">${i+1}</span><span>${esc(s)}</span></div>`).join('')}</div>
+      ${r.video ? `<div class="sec-title">视频教程 <span class="more">${esc(r.video.source)}</span></div>
+      <a class="video-card" href="${esc(r.video.url)}" target="_blank" rel="noopener noreferrer">
+        <span class="vc-play">▶</span>
+        <span class="grow"><b>${esc(r.video.title)}</b><small>点击前往哔哩哔哩观看完整做法</small></span>
+        <span class="vc-go">观看 ›</span>
+      </a>` : ''}`;
   }
 
   function pageRestock() {
@@ -1578,36 +1606,14 @@
     }, 40);
   }
 
-  /* ==================== 设置入口 ==================== */
-  function showSettingsModal() {
-    modalRoot.innerHTML = `<div class="modal-overlay" data-action="close-modal">
-      <div class="modal-card settings-card" data-stop="1">
-        <div class="modal-head">
-          <div class="modal-icon">${ICON.gear}</div>
-          <div class="grow"><h3>设置</h3><p>常用辅助功能都在这里</p></div>
-          <button class="al-close" data-action="close-app-layer" aria-label="关闭">${ICON.x}</button>
-        </div>
-        <button class="settings-item" data-action="tour-restart">
-          <span class="si-ico">🧭</span>
-          <span class="grow"><b>重新查看教程</b><small>再次了解鲜知的各项功能</small></span>
-          <span class="si-arrow">›</span>
-        </button>
-      </div>
-    </div>`;
-  }
-
   function initExperienceSequence() {
     startIntro(() => {
-      if (!safeStore.get(TOUR_SEEN_KEY)) {
-        // 新用户首次进入只走引导；临期信息直接由首页顶部横幅承接，不再连弹两层
-        startTour(() => safeStore.set(DAILY_EXPIRY_KEY, todayKey()));
-      } else {
-        maybeDailyExpiryPopup();
-      }
+      // 每次刷新都完整重播：新手引导 → 临期食材提醒
+      startTour(() => showDailyExpiryPopup());
     });
   }
 
-  window.addEventListener('resize', () => { if (tourActive) updateTourPosition(); });
+  window.addEventListener('resize', () => { if (tourActive) updateTourPosition(); updateScrollHint(); });
   appEl.addEventListener('scroll', () => { if (tourActive) updateTourPosition(); });
 
   /* ==================== 事件绑定 ==================== */
@@ -1641,7 +1647,6 @@
         if (file) file.click();
         return;
       }
-      if (a === 'settings-open') { showSettingsModal(); return; }
       if (a === 'tour-restart') { closeModal(); setTimeout(() => startTour(), 120); return; }
       if (a === 'daily-expiry-known') { closeModal(); return; }
       if (a === 'daily-expiry-view-all') {
@@ -1802,6 +1807,6 @@
   });
 
   renderApp();
-  // 页面加载时序：开场动画 → 首次新手教程 → 临期食材每日提醒
+  // 页面加载时序：开场动画 → 新手教程 → 临期食材提醒（每次刷新都重播）
   initExperienceSequence();
 })();
