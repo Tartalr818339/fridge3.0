@@ -62,12 +62,38 @@
   };
   let lastPage = null;
 
+  /* ==================== 开场动画 / 新手引导 / 每日提醒：状态与配置 ==================== */
+  const introRoot = $('#intro-root');
+  const tourRoot = $('#tour-root');
+  const TOUR_SEEN_KEY = 'freshSense3.tourSeen';
+  const DAILY_EXPIRY_KEY = 'freshSense3.expiryPopupDate';
+  const safeStore = {
+    get(key) { try { return localStorage.getItem(key); } catch (e) { return null; } },
+    set(key, value) { try { localStorage.setItem(key, value); } catch (e) { /* 隐私模式下忽略 */ } }
+  };
+  function todayKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+  const TOUR_STEPS = [
+    { title: '欢迎使用鲜知', desc: '帮你管好冰箱里的食材，减少浪费，每一口都吃得刚刚好。', target: '.app-hero' },
+    { title: '先看临期提醒', desc: '这里按紧急程度排序，越靠前越该先吃掉，打开冰箱前就能心里有数。', target: '.alert-banner' },
+    { title: '按位置找食材', desc: '冰箱分区模块按真实位置管理食材，冷藏、冷冻一目了然。', target: '.fridge-view.appliance' },
+    { title: '切换冰箱类型', desc: '点击这个按钮，可匹配你家冰箱，让分区更准确。', target: '.mac-primary' },
+    { title: '随时添加食材', desc: '底部这个醒目的 ＋ 添加 入口，之后可以拍照、手动或一句话新增食材。', target: '.tab-add' },
+    { title: '引导完成', desc: '现在开始管理你的冰箱吧，鲜知会一直帮你留意保质时间。', target: '.phone-frame' }
+  ];
+  let tourActive = false;
+  let tourStep = 0;
+  let tourDoneCallback = null;
+
   function renderTopbar(page) {
     const urgent = ITEMS.filter(i => i.remainingDays <= 2).length;
     topbarEl.className = 'app-topbar' + (appEl.scrollTop > 8 ? ' scrolled' : '');
     const back = page === 'home' ? '' : `<button class="tb-back" data-go="home">‹ 首页</button>`;
     topbarEl.innerHTML = `${back}<div class="tb-title">${PAGE_TITLES[page] || '鲜知'}</div>
-      <button class="tb-status" data-go="fridge"><span class="tb-dot${urgent ? ' warn' : ''}"></span>${ITEMS.length} 件食材${urgent ? ` · ${urgent} 件快到期` : ''}</button>`;
+      <button class="tb-status" data-go="fridge"><span class="tb-dot${urgent ? ' warn' : ''}"></span>${ITEMS.length} 件食材${urgent ? ` · ${urgent} 件快到期` : ''}</button>
+      <button class="tb-setting" data-action="settings-open" aria-label="设置">${ICON.gear}</button>`;
   }
 
   appEl.addEventListener('scroll', () => {
@@ -143,8 +169,16 @@
       { title: '冷藏区', hint: '2~8℃ · 日常保鲜', layers: layers.filter(l => !l.includes('冷冻')) },
       { title: '冷冻区', hint: '-18℃ · 长期保存', layers: layers.filter(l => l.includes('冷冻')) }
     ];
-    return `<div class="zone-model-bar">
-        <button class="model-chip" data-action="fridge-model">🧊 ${esc(currentModel().name)} · ${layers.length} 分区<span>更换 / 拍照识别 ›</span></button>
+    return `<div class="model-action-card" id="fridge-model-card">
+        <div class="mac-ico">${ICON.fridge}</div>
+        <div class="mac-info">
+          <div class="mac-title-row"><h4>${esc(currentModel().name)}</h4><span class="mac-sub">${layers.length} 分区</span></div>
+          <p>选择和你家一致的冰箱结构，管理更精准</p>
+        </div>
+        <div class="mac-actions">
+          <button class="mac-primary" data-action="fridge-model">切换冰箱类型</button>
+          <button class="mac-photo" data-action="fridge-model-photo">拍照识别</button>
+        </div>
       </div>
       <div class="fridge-view appliance">${groups.filter(g => g.layers.length).map(g => `
       <div class="fv-group ${g.title === '冷冻区' ? 'cold' : ''}">
@@ -468,7 +502,7 @@
 
   function showFridgeModelModal() {
     modalRoot.innerHTML = `<div class="modal-overlay" data-action="close-modal">
-      <div class="modal-card" data-stop="1">
+      <div class="modal-card model-modal" data-stop="1">
         <div class="modal-head">
           <div class="modal-icon">🧊</div>
           <div class="grow"><h3>我的冰箱型号</h3><p>分区按你家冰箱来，不再搞混冷藏和冷冻</p></div>
@@ -1238,8 +1272,236 @@
     if (!showDuplicateModal(next.sku, next.rid)) processDupQueue();
   }
 
+  /* ==================== 品牌开场动画 ==================== */
+  function startIntro(onDone) {
+    if (!introRoot) { if (onDone) onDone(); return; }
+    let finished = false;
+    introRoot.className = 'intro-root active';
+    introRoot.innerHTML = `
+      <div class="intro-mask"></div>
+      <button class="intro-skip" type="button">跳过</button>
+      <div class="intro-center">
+        <div class="brand-fridge">
+          <div class="bf-foods">
+            <span class="bf-food bf-food-1">🥛</span>
+            <span class="bf-food bf-food-2">🥬</span>
+            <span class="bf-food bf-food-3">🐟</span>
+            <span class="bf-food bf-food-4">🍗</span>
+          </div>
+          <div class="bf-door bf-door-left"></div>
+          <div class="bf-door bf-door-right"></div>
+          <span class="bf-handle bf-handle-left"></span>
+          <span class="bf-handle bf-handle-right"></span>
+        </div>
+        <div class="intro-brand">
+          <h1>鲜知</h1>
+          <p>管好冰箱，减少浪费</p>
+        </div>
+      </div>`;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      introRoot.onclick = null;
+      introRoot.classList.add('closing');
+      setTimeout(() => {
+        introRoot.className = 'intro-root';
+        introRoot.innerHTML = '';
+        if (onDone) onDone();
+      }, 320);
+    };
+    introRoot.onclick = () => finish();
+    requestAnimationFrame(() => {
+      introRoot.classList.add('open');
+      setTimeout(() => introRoot.classList.add('brand-in'), 700);
+      setTimeout(finish, 2000);
+    });
+  }
+
+  /* ==================== 新手引导教程 ==================== */
+  function startTour(onDone) {
+    if (tourActive || !tourRoot) return;
+    tourActive = true;
+    tourStep = 0;
+    tourDoneCallback = onDone || null;
+    STATE.appPage = 'home';
+    appEl.scrollTop = 0;
+    renderApp();
+    tourRoot.className = 'tour-root';
+    tourRoot.innerHTML = `
+      <div class="tour-spotlight"></div>
+      <div class="tour-card" role="dialog" aria-live="polite">
+        <button class="tour-skip" type="button" data-tour-action="skip">跳过</button>
+        <div class="tour-kicker">新手引导 · <span class="tour-count-current">1</span>/${TOUR_STEPS.length}</div>
+        <h3 class="tour-title"></h3>
+        <p class="tour-desc"></p>
+        <div class="tour-dots"></div>
+        <div class="tour-actions">
+          <button class="tour-prev" type="button" data-tour-action="prev">上一步</button>
+          <button class="tour-next" type="button" data-tour-action="next">下一步</button>
+        </div>
+      </div>`;
+    renderTourStep();
+    requestAnimationFrame(updateTourPosition);
+  }
+
+  function renderTourStep() {
+    const root = tourRoot;
+    if (!root || !tourActive) return;
+    const step = TOUR_STEPS[tourStep];
+    root.querySelector('.tour-count-current').textContent = String(tourStep + 1);
+    root.querySelector('.tour-title').textContent = step.title;
+    root.querySelector('.tour-desc').textContent = step.desc;
+    root.querySelector('.tour-dots').innerHTML = TOUR_STEPS.map((_, i) => `<i class="${i === tourStep ? 'active' : ''}"></i>`).join('');
+    const prev = root.querySelector('.tour-prev');
+    prev.style.visibility = tourStep === 0 ? 'hidden' : 'visible';
+    root.querySelector('.tour-next').textContent = tourStep === TOUR_STEPS.length - 1 ? '开始使用' : '下一步';
+    const card = root.querySelector('.tour-card');
+    card.classList.remove('step-in');
+    void card.offsetWidth;
+    card.classList.add('step-in');
+    requestAnimationFrame(updateTourPosition);
+  }
+
+  function updateTourPosition() {
+    const root = tourRoot;
+    if (!root || !tourActive) return;
+    const step = TOUR_STEPS[tourStep];
+    const spotlight = root.querySelector('.tour-spotlight');
+    const card = root.querySelector('.tour-card');
+    const target = step.target ? $(step.target) : $('.phone-frame');
+    if (!target) {
+      spotlight.style.opacity = '0';
+      return;
+    }
+    const rect = target.getBoundingClientRect();
+    const pad = step.target === '.tab-add' ? 6 : 8;
+    spotlight.style.opacity = '1';
+    spotlight.style.left = `${rect.left - pad}px`;
+    spotlight.style.top = `${rect.top - pad}px`;
+    spotlight.style.width = `${rect.width + pad * 2}px`;
+    spotlight.style.height = `${rect.height + pad * 2}px`;
+    spotlight.style.borderRadius = step.target === '.phone-frame' ? '44px'
+      : step.target === '.tab-add' ? '20px' : '20px';
+
+    const cardW = Math.min(330, window.innerWidth - 32);
+    card.style.width = `${cardW}px`;
+    const cardH = card.offsetHeight || 210;
+    let left = rect.left + rect.width / 2 - cardW / 2;
+    left = Math.max(16, Math.min(window.innerWidth - cardW - 16, left));
+    let top = rect.bottom + 14;
+    if (top + cardH > window.innerHeight - 16) top = rect.top - cardH - 14;
+    if (top < 16) top = Math.max(16, window.innerHeight - cardH - 16);
+    card.style.left = `${left}px`;
+    card.style.top = `${top}px`;
+  }
+
+  function finishTour() {
+    if (!tourActive || !tourRoot) return;
+    const callback = tourDoneCallback;
+    tourActive = false;
+    tourDoneCallback = null;
+    safeStore.set(TOUR_SEEN_KEY, '1');
+    tourRoot.classList.add('closing');
+    setTimeout(() => {
+      tourRoot.className = 'tour-root';
+      tourRoot.innerHTML = '';
+    }, 260);
+    if (callback) setTimeout(callback, 280);
+  }
+
+  /* ==================== 临期食材每日提醒 ==================== */
+  function dailyExpiryTop() {
+    return ITEMS.filter(i => i.remainingDays >= 0 && i.remainingDays <= 3)
+      .sort((a, b) => a.remainingDays - b.remainingDays)
+      .slice(0, 3);
+  }
+  function remainingText(item) {
+    return item.remainingDays === 0 ? '已过期' : `还剩 ${item.remainingDays} 天`;
+  }
+  function showDailyExpiryPopup() {
+    const items = dailyExpiryTop();
+    if (!items.length) return;
+    safeStore.set(DAILY_EXPIRY_KEY, todayKey());
+    modalRoot.innerHTML = `<div class="modal-overlay" data-action="close-modal">
+      <div class="modal-card daily-expiry-card" data-stop="1">
+        <div class="modal-head">
+          <div class="modal-icon">⏰</div>
+          <div class="grow"><h3>今日临期提醒</h3><p>以下食材即将过期，建议优先食用</p></div>
+        </div>
+        <div class="daily-expiry-list">
+          ${items.map(i => {
+            const urgent = i.remainingDays <= 1;
+            return `<div class="daily-expiry-row ${urgent ? 'urgent' : ''}">
+              <span class="de-emoji">${i.icon}</span>
+              <div class="de-info">
+                <div class="de-name">${esc(i.name)}</div>
+                <div class="de-meta">${esc(i.quantity)}${esc(i.unit)} · ${remainingText(i)}</div>
+              </div>
+              <span class="de-days">${remainingText(i)}</span>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="modal-actions daily-expiry-actions">
+          <button class="btn btn-ghost" data-action="daily-expiry-known">知道了</button>
+          <button class="btn btn-primary" data-action="daily-expiry-view-all">查看全部</button>
+        </div>
+      </div>
+    </div>`;
+  }
+  function maybeDailyExpiryPopup() {
+    if (safeStore.get(DAILY_EXPIRY_KEY) === todayKey()) return;
+    showDailyExpiryPopup();
+  }
+  function scrollToFullFoodList() {
+    setTimeout(() => {
+      const target = appEl.querySelector('.fridge-hero');
+      if (!target) return;
+      const top = target.getBoundingClientRect().top - appEl.getBoundingClientRect().top + appEl.scrollTop - 64;
+      appEl.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    }, 40);
+  }
+
+  /* ==================== 设置入口 ==================== */
+  function showSettingsModal() {
+    modalRoot.innerHTML = `<div class="modal-overlay" data-action="close-modal">
+      <div class="modal-card settings-card" data-stop="1">
+        <div class="modal-head">
+          <div class="modal-icon">${ICON.gear}</div>
+          <div class="grow"><h3>设置</h3><p>常用辅助功能都在这里</p></div>
+          <button class="al-close" data-action="close-app-layer" aria-label="关闭">${ICON.x}</button>
+        </div>
+        <button class="settings-item" data-action="tour-restart">
+          <span class="si-ico">🧭</span>
+          <span class="grow"><b>重新查看教程</b><small>再次了解鲜知的各项功能</small></span>
+          <span class="si-arrow">›</span>
+        </button>
+      </div>
+    </div>`;
+  }
+
+  function initExperienceSequence() {
+    startIntro(() => {
+      if (!safeStore.get(TOUR_SEEN_KEY)) startTour(() => maybeDailyExpiryPopup());
+      else maybeDailyExpiryPopup();
+    });
+  }
+
+  window.addEventListener('resize', () => { if (tourActive) updateTourPosition(); });
+  appEl.addEventListener('scroll', () => { if (tourActive) updateTourPosition(); });
+
   /* ==================== 事件绑定 ==================== */
   document.addEventListener('click', (e) => {
+    const tourBtn = e.target.closest('[data-tour-action]');
+    if (tourBtn) {
+      const t = tourBtn.dataset.tourAction;
+      if (t === 'skip') finishTour();
+      else if (t === 'prev' && tourStep > 0) { tourStep -= 1; renderTourStep(); }
+      else if (t === 'next') {
+        if (tourStep < TOUR_STEPS.length - 1) { tourStep += 1; renderTourStep(); }
+        else finishTour();
+      }
+      return;
+    }
     const actionEl = e.target.closest('[data-action]');
 
     if (actionEl) {
@@ -1252,6 +1514,21 @@
       if (a === 'app-open-layer') { showAppLayerModal(actionEl.dataset.layer); return; }
       if (a === 'layer-view-all') { closeModal(); STATE.appPage = 'fridge'; renderApp(); return; }
       if (a === 'fridge-model') { showFridgeModelModal(); return; }
+      if (a === 'fridge-model-photo') {
+        showFridgeModelModal();
+        const file = $('#model-photo');
+        if (file) file.click();
+        return;
+      }
+      if (a === 'settings-open') { showSettingsModal(); return; }
+      if (a === 'tour-restart') { closeModal(); setTimeout(() => startTour(), 120); return; }
+      if (a === 'daily-expiry-known') { closeModal(); return; }
+      if (a === 'daily-expiry-view-all') {
+        closeModal();
+        if (STATE.appPage !== 'fridge') { STATE.appPage = 'fridge'; renderApp(); }
+        scrollToFullFoodList();
+        return;
+      }
       if (a === 'choose-model') { applyFridgeModel(actionEl.dataset.model); return; }
       if (a === 'voice-manual') { startVoice('manual'); return; }
       if (a === 'voice-text') { startVoice('text'); return; }
@@ -1396,4 +1673,6 @@
   });
 
   renderApp();
+  // 页面加载时序：开场动画 → 首次新手教程 → 临期食材每日提醒
+  initExperienceSequence();
 })();
