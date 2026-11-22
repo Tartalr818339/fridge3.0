@@ -48,6 +48,49 @@
     setTimeout(() => t.remove(), 2200);
   }
 
+  function toastWithAction(msg, actionLabel, onClick) {
+    const t = document.createElement('div');
+    t.className = 'toast toast-action';
+    const text = document.createElement('span');
+    text.textContent = msg;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = actionLabel;
+    btn.addEventListener('click', () => { t.remove(); onClick(); });
+    t.append(text, btn);
+    toastRoot.appendChild(t);
+    setTimeout(() => t.remove(), 5200);
+  }
+
+  function highlightAddedLayer(layer) {
+    if (!layer) return;
+    setTimeout(() => {
+      const selector = `.fv-row[data-layer="${CSS.escape(layer)}"], .fd-layer[data-layer="${CSS.escape(layer)}"]`;
+      $$(selector).forEach(el => {
+        el.classList.remove('just-added');
+        void el.offsetWidth;
+        el.classList.add('just-added');
+        setTimeout(() => el.classList.remove('just-added'), 2600);
+      });
+    }, 80);
+  }
+
+  function viewAddedLayer(layer) {
+    if (!layer) return;
+    STATE.appPage = 'fridge';
+    STATE.focusLayer = layer;
+    renderApp();
+  }
+
+  function announceAdded(items) {
+    const list = (items || []).filter(Boolean);
+    if (!list.length) return;
+    const layers = Array.from(new Set(list.map(x => x.layer).filter(Boolean)));
+    const text = layers.length === 1 ? `已放入${layers[0]}` : `已放入 ${layers.length} 个分区`;
+    layers.forEach(highlightAddedLayer);
+    toastWithAction(text, '查看', () => viewAddedLayer(layers[0]));
+  }
+
   /* ==================== 手机 App ==================== */
   // 底部导航只放四个独立入口；冰箱食材是首页分区的下钻页面，不单列 Tab
   const TABS = [
@@ -194,7 +237,7 @@
             <span class="fv-ico">${layerIcon(layer)}</span>
             <span class="fv-name">${esc(layer)}<small>${esc((LAYER_META[layer] || {}).temp || '')}</small></span>
             <span class="fv-bar">${bar}</span>
-            <span class="fv-count">${its.length} 件${urgent ? `<em>${urgent} 急</em>` : ''}</span>
+            <span class="fv-count">${its.length} 件${urgent ? `<em>${urgent} 件即将过期</em>` : ''}</span>
             <span class="fv-arrow">›</span>
           </button>`;
         }).join('')}
@@ -214,6 +257,12 @@
     const win = expiryWindows().find(w => w.d === STATE.expiryDay) || expiryWindows()[3];
     return pool.filter(win.test).sort((a, b) => a.remainingDays - b.remainingDays);
   }
+  function priorityTag(item) {
+    if (!item) return '';
+    if (item.remainingDays === 0) return '<span class="priority-tag expired">⛔ 已过期</span>';
+    if (item.remainingDays <= 2) return '<span class="priority-tag">⏰ 优先吃</span>';
+    return '';
+  }
   function showExpiryModal(items) {
     modalRoot.innerHTML = `<div class="modal-overlay" data-action="close-modal">
       <div class="modal-card" data-stop="1">
@@ -226,7 +275,7 @@
           ${items.map(i => `<div class="al-row ${i.freshness}">
             <span class="al-emoji">${i.icon}</span>
             <div class="al-info">
-              <div class="al-name">${esc(i.name)} <span class="pill-tag ${i.freshness}">${i.remainingDays === 0 ? '已过期' : '还剩 ' + i.remainingDays + ' 天'}</span></div>
+              <div class="al-name">${esc(i.name)} <span class="pill-tag ${i.freshness}">${i.remainingDays === 0 ? '已过期' : '还剩 ' + i.remainingDays + ' 天'}</span>${priorityTag(i)}</div>
               <div class="al-meta">保质至 ${esc(i.expiryDate)} · ${i.quantity}${esc(i.unit)}</div>
             </div>
           </div>`).join('')}
@@ -256,7 +305,7 @@
           <div class="expiry-list-mini">
             ${shown.length ? shown.map(i => `<div class="expiry-mini-row">
               <span class="em-ico">${i.icon}</span><span class="em-name">${esc(i.name)}</span>
-              <span class="em-meta">${i.remainingDays === 0 ? '已过期' : '还剩 ' + i.remainingDays + ' 天'} · ${i.quantity}${esc(i.unit)}</span>
+              <span class="em-meta">${i.remainingDays === 0 ? '已过期' : '还剩 ' + i.remainingDays + ' 天'} · ${i.quantity}${esc(i.unit)}</span>${priorityTag(i)}
             </div>`).join('') : '<div class="expiry-none">这个范围内没有快到期的食材</div>'}
             ${dayItems.length > 3 ? `<button class="expiry-more" data-action="expiry-all">查看全部 ${dayItems.length} 件 ›</button>` : ''}
           </div>
@@ -281,7 +330,7 @@
           ${its.map(i => `<div class="fd-item ${i.freshness}">
             <span class="fd-emoji">${i.icon}</span>
             <div class="fd-info">
-              <div class="fd-name">${esc(i.name)} <span class="pill-tag ${i.freshness}">${i.remainingDays === 0 ? '已过期' : FRESHNESS[i.freshness].label}</span></div>
+              <div class="fd-name">${esc(i.name)} <span class="pill-tag ${i.freshness}">${i.remainingDays === 0 ? '已过期' : FRESHNESS[i.freshness].label}</span>${priorityTag(i)}</div>
               <div class="fd-meta">保质至 ${esc(i.expiryDate)} · ${i.quantity}${esc(i.unit)}</div>
             </div>
             <div class="fd-days ${i.freshness}"><b>${i.remainingDays === 0 ? '!' : i.remainingDays}</b><small>${i.remainingDays === 0 ? '过期' : '天'}</small></div>
@@ -486,7 +535,7 @@
           ${items.map(i => `<div class="al-row ${i.freshness}">
             <span class="al-emoji">${i.icon}</span>
             <div class="al-info">
-              <div class="al-name">${esc(i.name)} <span class="pill-tag ${i.freshness}">${i.remainingDays === 0 ? '已过期' : '还剩 ' + i.remainingDays + ' 天'}</span></div>
+              <div class="al-name">${esc(i.name)} <span class="pill-tag ${i.freshness}">${i.remainingDays === 0 ? '已过期' : '还剩 ' + i.remainingDays + ' 天'}</span>${priorityTag(i)}</div>
               <div class="al-meta">保质至 ${esc(i.expiryDate)} · ${i.quantity}${esc(i.unit)}</div>
               <div class="al-bar"><span style="width:${i.freshPct}%;background:${FRESHNESS[i.freshness].color}"></span></div>
             </div>
@@ -995,9 +1044,14 @@
     if (!box || !box.dataset.batch) return;
     const list = JSON.parse(box.dataset.batch);
     const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const added = [];
     list.forEach(p => {
       const existing = ITEMS.find(i => i.name === p.name);
-      if (existing) { existing.quantity += p.qty; existing.source = '批量录入'; return; }
+      if (existing) {
+        existing.quantity += p.qty; existing.source = '批量录入';
+        added.push({ name: p.name, layer: existing.layer });
+        return;
+      }
       const exp = new Date(TODAY); exp.setDate(exp.getDate() + p.days);
       ITEMS.push({
         id: 'it-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
@@ -1007,9 +1061,9 @@
         freshPct: p.days <= 1 ? 15 : p.days === 2 ? 40 : 90,
         quantity: p.qty, unit: p.unit, source: '批量录入'
       });
+      added.push({ name: p.name, layer: p.layer });
     });
-    closeModal(); renderApp();
-    toast(`已批量录入 ${list.length} 样食材`);
+    closeModal(); renderApp(); announceAdded(added);
   }
   function entryParse(text) {
     const parsed = parseFoodText(text);
@@ -1035,10 +1089,13 @@
     const box = $('#entry-result');
     if (!box || !box.dataset.parsed) return;
     const parsed = JSON.parse(box.dataset.parsed);
+    const added = [];
     parsed.forEach(p => {
       const existing = ITEMS.find(i => i.name === p.name);
-      if (existing) { existing.quantity += p.qty; existing.source = '快速录入'; }
-      else {
+      if (existing) {
+        existing.quantity += p.qty; existing.source = '快速录入';
+        added.push({ name: p.name, layer: existing.layer });
+      } else {
         const exp = new Date(TODAY); exp.setDate(exp.getDate() + p.days);
         const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         ITEMS.push({
@@ -1047,14 +1104,14 @@
           purchaseDate: TODAY, expiryDate: iso(exp), remainingDays: p.days,
           freshness: 'green', freshPct: 95, quantity: p.qty, unit: p.unit, source: '快速录入'
         });
+        added.push({ name: p.name, layer: p.layer });
       }
     });
-    closeModal(); renderApp();
-    toast(`已录入 ${parsed.length} 样食材到冰箱`);
+    closeModal(); renderApp(); announceAdded(added);
   }
 
   // 添加食材弹窗：拍照 / 手动 / 一句话 三种方式，各自都有单件与批量
-  let addMode = 'photo';
+  let addMode = 'manual';
   let addBatch = false;
   let voiceRecognition = null;
   function stopVoice() {
@@ -1081,7 +1138,12 @@
           const set = (id, val) => { const el = $('#' + id); if (el) el.value = val; };
           set('af-name', p.name); set('af-qty', p.qty); set('af-unit', p.unit); set('af-days', p.days);
           const layers = currentLayers();
-          set('af-layer', layers.includes(p.layer) ? p.layer : layers[0]);
+          const layerBox = $('#af-layer');
+          const picked = layers.includes(p.layer) ? p.layer : layers[0];
+          if (layerBox) {
+            layerBox.dataset.layer = picked;
+            $$('.layer-chip', layerBox).forEach(b => b.classList.toggle('active', b.dataset.layer === picked));
+          }
           toast('已识别：' + parsed.map(x => x.name).join('、'));
         } else {
           const el = $('#af-name'); if (el) el.value = text;
@@ -1107,11 +1169,19 @@
       return batchPanel();
     }
     if (addMode === 'manual') {
-      return `<div class="add-field"><label>食材名称</label>
+      const layers = currentLayers();
+      const defaultLayer = layers[0];
+      return `<div class="add-quick">
+          <button class="aq-btn" data-action="add-tab" data-mode="photo">📷 拍照识别</button>
+          <button class="aq-btn" data-action="add-tab" data-mode="text">💬 一句话录入</button>
+        </div>
+        <div class="add-field"><label>食材名称</label>
           <div class="input-with-mic"><input id="af-name" placeholder="如：鸡蛋、牛奶、西兰花" /><button class="mic-btn" data-action="voice-manual" aria-label="语音输入">🎤</button></div>
         </div>
-        <div class="add-row">
-          <div class="add-field"><label>所在层</label><select id="af-layer">${currentLayers().map(l => `<option>${l}</option>`).join('')}</select></div>
+        <div class="add-field"><label>所在层</label>
+          <div class="layer-picker" id="af-layer" data-layer="${esc(defaultLayer)}">
+            ${layers.map(l => `<button type="button" class="layer-chip ${l === defaultLayer ? 'active' : ''}" data-action="pick-layer" data-layer="${esc(l)}">${esc(l)}</button>`).join('')}
+          </div>
         </div>
         <div class="add-row">
           <div class="add-field"><label>数量</label><input id="af-qty" type="number" min="1" value="1" /></div>
@@ -1169,7 +1239,7 @@
   }
   function showAddModal(mode) {
     stopVoice();
-    addMode = mode || 'photo';
+    addMode = mode || 'manual';
     addBatch = false;
     renderAddModal();
     if (addMode === 'text') setTimeout(() => { const el = $('#ai-food-input'); if (el) el.focus(); }, 50);
@@ -1183,8 +1253,8 @@
           <button class="al-close" data-action="close-app-layer" aria-label="关闭">${ICON.x}</button>
         </div>
         <div class="add-tabs">
+          <button class="add-tab ${addMode==='manual'?'active':''}" data-action="add-tab" data-mode="manual">✍️ 手动<i>推荐</i></button>
           <button class="add-tab ${addMode==='photo'?'active':''}" data-action="add-tab" data-mode="photo">📷 拍照</button>
-          <button class="add-tab ${addMode==='manual'?'active':''}" data-action="add-tab" data-mode="manual">✍️ 手动</button>
           <button class="add-tab ${addMode==='text'?'active':''}" data-action="add-tab" data-mode="text">💬 一句话</button>
         </div>
         <div class="batch-toggle">
@@ -1200,32 +1270,34 @@
     </div>`;
     renderAddPanel();
   }
-  function addNewItem(name, qty, unit, layer, days) {
+  function addNewItem(name, qty, unit, layer, days, silent) {
     name = String(name || '').trim();
     if (!name) { toast('请输入食材名称'); return false; }
     const exp = new Date(TODAY); exp.setDate(exp.getDate() + days);
     const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     const existing = ITEMS.find(i => i.name === name);
+    const targetLayer = existing ? existing.layer : (layer || defaultLayerForFood(name));
     if (existing) {
       existing.quantity += qty;
     } else {
       ITEMS.push({
-        id: 'it-' + Date.now(), name, icon: iconForFood(name), layer: layer || defaultLayerForFood(name),
+        id: 'it-' + Date.now(), name, icon: iconForFood(name), layer: targetLayer,
         purchaseDate: TODAY, expiryDate: iso(exp), remainingDays: days,
         freshness: days <= 1 ? 'red' : days === 2 ? 'yellow' : 'green',
         freshPct: days <= 1 ? 15 : days === 2 ? 40 : 90,
         quantity: qty, unit: unit || '份', source: '手动添加'
       });
     }
-    renderApp(); toast(`已添加「${name}」到冰箱食材库`);
-    return true;
+    renderApp();
+    if (!silent) announceAdded([{ name, layer: targetLayer }]);
+    return { name, layer: targetLayer };
   }
   function addSave() {
     if (addMode === 'manual') {
       const name = $('#af-name') && $('#af-name').value;
       const qty = +($('#af-qty') && $('#af-qty').value || 1);
       const unit = ($('#af-unit') && $('#af-unit').value) || '份';
-      const layer = ($('#af-layer') && $('#af-layer').value) || '冷藏室中层';
+      const layer = ($('#af-layer') && $('#af-layer').dataset.layer) || '冷藏室上层';
       const days = +($('#af-days') && $('#af-days').value || 7);
       if (addNewItem(name, qty, unit, layer, days)) closeModal();
       return;
@@ -1234,10 +1306,12 @@
       if (addMode === 'photo') {
         const pv = $('#ap-preview');
         if (!pv || !pv.dataset.photoBatch) { toast('请先选好多张食材照片'); return; }
-        addNewItem('鲜鸡蛋', 6, '枚', '冷藏室中层', 8);
-        addNewItem('全脂牛奶', 1, '盒', '冷藏室上层', 8);
-        addNewItem('番茄', 4, '个', '果蔬抽屉', 7);
-        closeModal(); toast('多张照片识别的 3 样食材已入库');
+        const added = [
+          addNewItem('鲜鸡蛋', 6, '枚', '冷藏室中层', 8, true),
+          addNewItem('全脂牛奶', 1, '盒', '冷藏室上层', 8, true),
+          addNewItem('番茄', 4, '个', '果蔬抽屉', 7, true)
+        ];
+        closeModal(); announceAdded(added);
       } else {
         batchParse(($('#batch-input') && $('#batch-input').value) || '');
       }
@@ -1250,9 +1324,11 @@
     if (addMode === 'photo') {
       const pv = $('#ap-preview');
       if (!pv || !pv.dataset.photo) { toast('请先拍照 / 上传食材照片'); return; }
-      addNewItem('全脂牛奶', 1, '盒', '冷藏室上层', 8);
-      addNewItem('吐司面包', 1, '袋', '冷藏室上层', 7);
-      closeModal(); toast('识别的 2 样食材已入库');
+      const added = [
+        addNewItem('全脂牛奶', 1, '盒', '冷藏室上层', 8, true),
+        addNewItem('吐司面包', 1, '袋', '冷藏室上层', 7, true)
+      ];
+      closeModal(); announceAdded(added);
     }
   }
 
@@ -1476,7 +1552,7 @@
               <span class="de-emoji">${i.icon}</span>
               <div class="de-info">
                 <div class="de-name">${esc(i.name)}</div>
-                <div class="de-meta">${esc(i.quantity)}${esc(i.unit)} · ${remainingText(i)}</div>
+                <div class="de-meta">${esc(i.quantity)}${esc(i.unit)} · ${remainingText(i)} ${priorityTag(i)}</div>
               </div>
               <span class="de-days">${remainingText(i)}</span>
             </div>`;
@@ -1522,8 +1598,12 @@
 
   function initExperienceSequence() {
     startIntro(() => {
-      if (!safeStore.get(TOUR_SEEN_KEY)) startTour(() => maybeDailyExpiryPopup());
-      else maybeDailyExpiryPopup();
+      if (!safeStore.get(TOUR_SEEN_KEY)) {
+        // 新用户首次进入只走引导；临期信息直接由首页顶部横幅承接，不再连弹两层
+        startTour(() => safeStore.set(DAILY_EXPIRY_KEY, todayKey()));
+      } else {
+        maybeDailyExpiryPopup();
+      }
     });
   }
 
@@ -1598,6 +1678,14 @@
       }
       if (a === 'batch-confirm') { batchConfirm(); return; }
       if (a === 'add-tab') { addMode = actionEl.dataset.mode; renderAddPanel(); return; }
+      if (a === 'pick-layer') {
+        const box = actionEl.closest('#af-layer');
+        if (box) {
+          box.dataset.layer = actionEl.dataset.layer;
+          $$('.layer-chip', box).forEach(b => b.classList.toggle('active', b === actionEl));
+        }
+        return;
+      }
       if (a === 'add-batch') { addBatch = actionEl.dataset.batch === 'batch'; renderAddPanel(); return; }
       if (a === 'add-save') { addSave(); return; }
       if (a === 'ai-view-steps') { showAiSteps(); return; }
