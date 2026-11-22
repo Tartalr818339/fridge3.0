@@ -86,6 +86,7 @@
   let tourActive = false;
   let tourStep = 0;
   let tourDoneCallback = null;
+  let tourStepToken = 0;
 
   function renderTopbar(page) {
     const urgent = ITEMS.filter(i => i.remainingDays <= 2).length;
@@ -1323,6 +1324,7 @@
     tourActive = true;
     tourStep = 0;
     tourDoneCallback = onDone || null;
+    tourStepToken += 1;
     STATE.appPage = 'home';
     appEl.scrollTop = 0;
     renderApp();
@@ -1344,9 +1346,36 @@
     requestAnimationFrame(updateTourPosition);
   }
 
+  function showTourStepCard() {
+    const root = tourRoot;
+    if (!root || !tourActive) return;
+    const card = root.querySelector('.tour-card');
+    const spotlight = root.querySelector('.tour-spotlight');
+    card.classList.remove('waiting');
+    spotlight.style.opacity = '1';
+    card.classList.remove('step-in');
+    void card.offsetWidth;
+    card.classList.add('step-in');
+    requestAnimationFrame(updateTourPosition);
+  }
+
+  function scrollTourTargetIntoView(selector, done) {
+    const target = selector ? $(selector) : null;
+    if (!target) { setTimeout(done, 120); return; }
+    const appRect = appEl.getBoundingClientRect();
+    const rect = target.getBoundingClientRect();
+    const targetTop = rect.top - appRect.top + appEl.scrollTop;
+    const viewH = appEl.clientHeight;
+    const overflow = Math.max(0, rect.height - (viewH - 96));
+    const top = Math.max(0, targetTop - 68 + overflow);
+    appEl.scrollTo({ top, behavior: 'smooth' });
+    setTimeout(done, 520);
+  }
+
   function renderTourStep() {
     const root = tourRoot;
     if (!root || !tourActive) return;
+    const token = ++tourStepToken;
     const step = TOUR_STEPS[tourStep];
     root.querySelector('.tour-count-current').textContent = String(tourStep + 1);
     root.querySelector('.tour-title').textContent = step.title;
@@ -1356,6 +1385,18 @@
     prev.style.visibility = tourStep === 0 ? 'hidden' : 'visible';
     root.querySelector('.tour-next').textContent = tourStep === TOUR_STEPS.length - 1 ? '开始使用' : '下一步';
     const card = root.querySelector('.tour-card');
+    const spotlight = root.querySelector('.tour-spotlight');
+    if (tourStep === 2) {
+      card.classList.add('waiting');
+      spotlight.style.opacity = '0';
+      scrollTourTargetIntoView(step.target, () => {
+        if (!tourActive || token !== tourStepToken) return;
+        showTourStepCard();
+      });
+      return;
+    }
+    card.classList.remove('waiting');
+    spotlight.style.opacity = '1';
     card.classList.remove('step-in');
     void card.offsetWidth;
     card.classList.add('step-in');
@@ -1375,7 +1416,7 @@
     }
     const rect = target.getBoundingClientRect();
     const pad = step.target === '.tab-add' ? 6 : 8;
-    spotlight.style.opacity = '1';
+    if (!card.classList.contains('waiting')) spotlight.style.opacity = '1';
     spotlight.style.left = `${rect.left - pad}px`;
     spotlight.style.top = `${rect.top - pad}px`;
     spotlight.style.width = `${rect.width + pad * 2}px`;
