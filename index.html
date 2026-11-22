@@ -5,13 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#123D28" />
   <title>鲜知 FreshSense 3.0 · 手机 App</title>
-  <link rel="stylesheet" href="./styles.css?v=43" />
+  <link rel="stylesheet" href="./styles.css?v=44" />
 </head>
 <body>
   <div class="app-stage">
     <div class="phone-frame">
       <div id="app-topbar" class="app-topbar"><!-- JS renders --></div>
       <div id="app-content" class="app-content"><!-- JS renders --></div>
+      <!-- 滚动提示：右侧滚动条 + 底部下滑提示 -->
+      <div id="scroll-rail" class="scroll-rail" aria-hidden="true"><span></span></div>
+      <div id="scroll-cue" class="scroll-cue" aria-hidden="true">下滑查看冰箱分区 <b>↓</b></div>
       <div id="app-tabbar" class="app-tabbar"><!-- JS renders --></div>
     </div>
   </div>
@@ -31,7 +34,7 @@
   <div id="tour-root"></div>
   <div id="toast-root" class="toast-root"></div>
 
-  <script src="./data.js?v=43"></script>
-  <script src="./app.js?v=43"></script>
+  <script src="./data.js?v=44"></script>
+  <script src="./app.js?v=44"></script>
 </body>
 </html>
