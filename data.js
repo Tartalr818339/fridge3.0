@@ -73,7 +73,7 @@ const RECIPES = [
     ],
     expiring: ['番茄'],
     steps: ['番茄切块、鸡蛋打散备用。', '热油炒蛋至凝固盛出。', '下番茄炒出汁，回锅鸡蛋调味即成。'],
-    video: { title: '广东家常番茄炒蛋做法', url: 'https://www.bilibili.com/video/BV1ST4y137o7', source: '哔哩哔哩' } },
+    video: { title: '小高姐番茄炒蛋技巧', url: 'https://www.bilibili.com/video/BV1PW411T7YB', source: '哔哩哔哩' } },
   { id: 'rc-02', name: '香煎三文鱼', emoji: '🐟', minutes: 20, thumb: 'linear-gradient(135deg,#FF9A8B,#FF6A88)',
     ingredients: [
       { name: '三文鱼', have: true }, { name: '西兰花', have: true }, { name: '柠檬', have: false }
