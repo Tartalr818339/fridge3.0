@@ -53,6 +53,13 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 }
 .app-content{flex:1;overflow-y:auto;scrollbar-width:none;padding:58px 16px 128px;-webkit-overflow-scrolling:touch}
 .app-content::-webkit-scrollbar{display:none}
+/* 可见滚动提示：右侧进度条 + 底部下滑引导 */
+.scroll-rail{position:absolute;right:5px;top:68px;bottom:80px;width:4px;border-radius:999px;background:rgba(18,61,40,.10);opacity:0;pointer-events:none;z-index:6;transition:opacity .25s ease}
+.scroll-rail.active{opacity:1}
+.scroll-rail span{position:absolute;left:0;width:100%;min-height:28px;border-radius:999px;background:linear-gradient(180deg,#1DB954,#0E7C3A);box-shadow:0 2px 8px rgba(14,124,58,.35);transition:top .12s linear,height .2s ease}
+.scroll-cue{position:absolute;left:50%;bottom:82px;transform:translateX(-50%);z-index:6;display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.94);border:1px solid #BED9C8;color:var(--green-deep);font-size:12px;font-weight:800;white-space:nowrap;box-shadow:0 6px 18px rgba(18,61,40,.16);pointer-events:none;animation:cueBob 1.6s ease-in-out infinite;transition:opacity .25s ease,transform .25s ease}
+.scroll-cue.hidden{opacity:0;transform:translate(-50%,8px)}
+@keyframes cueBob{0%,100%{margin-bottom:0}50%{margin-bottom:4px}}
 .app-topbar{position:absolute;top:0;left:0;right:0;height:58px;z-index:7;display:flex;align-items:center;gap:10px;padding:0 18px;pointer-events:none;color:var(--ink);background:rgba(255,255,255,.58);backdrop-filter:blur(8px) saturate(130%);-webkit-backdrop-filter:blur(8px) saturate(130%);border-bottom:1px solid rgba(255,255,255,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.6);transition:background .28s ease,box-shadow .28s ease,backdrop-filter .28s ease}
 .app-topbar.scrolled{background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.78));backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border-bottom-color:rgba(255,255,255,.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 8px 26px rgba(18,61,40,.12)}
 .tb-back{pointer-events:auto;flex:none;min-height:36px;padding:5px 12px 5px 8px;border-radius:999px;background:#fff;border:1px solid #C9DDCF;color:var(--green-deep);font-size:13px;font-weight:800;box-shadow:0 2px 8px rgba(18,61,40,.10)}
@@ -291,6 +298,13 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .expiring-tip{background:var(--yellow-soft);border:1px solid #F6E3A6;border-radius:12px;padding:10px 12px;font-size:13px;color:var(--yellow-deep);margin:12px 0;display:flex;gap:8px;align-items:center}
 .step-item{display:flex;gap:10px;margin-bottom:10px;font-size:13px;line-height:1.6;color:var(--ink-2)}
 .step-num{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:13px;flex:none}
+.video-mini{display:inline-block;margin:5px 0 0 6px;font-size:12px;font-weight:800;color:var(--red-deep);background:var(--red-soft);border-radius:999px;padding:3px 8px}
+.video-card{display:flex;align-items:center;gap:11px;margin-top:2px;padding:13px;border-radius:14px;background:linear-gradient(135deg,#FFE9E9,#FFF5F0);border:1px solid #F0C9C5;color:var(--ink);text-decoration:none;transition:.2s}
+.video-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(180,55,55,.14);border-color:#E8A9A4}
+.vc-play{width:38px;height:38px;flex:none;border-radius:12px;background:#fff;color:#D93A3A;display:grid;place-items:center;font-size:15px;box-shadow:0 3px 10px rgba(180,55,55,.16)}
+.video-card b{display:block;font-size:13px}
+.video-card small{display:block;font-size:12px;color:#8B5F5F;margin-top:3px}
+.vc-go{font-size:13px;font-weight:800;color:#C83232;white-space:nowrap}
 
 /* 补货清单 */
 .restock-item{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px;margin-bottom:9px;transition:.2s}
@@ -456,10 +470,10 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .add-preview .ap-row b{margin-left:auto;color:var(--green-deep)}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(29,185,84,.3)}50%{box-shadow:0 0 0 12px rgba(29,185,84,0)}}
 
-/* ============ 设置入口（右上角） ============ */
-.tb-setting{pointer-events:auto;flex:none;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.94);border:1px solid #C9DDCF;color:var(--green-deep);display:grid;place-items:center;box-shadow:0 2px 8px rgba(18,61,40,.10);transition:.2s}
-.tb-setting svg{width:18px;height:18px}
-.tb-setting:active{transform:scale(.94)}
+/* ============ 右上角新手教程入口（直接可点） ============ */
+.tb-guide{pointer-events:auto;flex:none;min-height:34px;padding:4px 10px;border-radius:999px;background:#fff;border:1px solid #BED9C8;color:var(--green-deep);display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;box-shadow:0 2px 8px rgba(18,61,40,.10);transition:.2s}
+.tb-guide:hover{background:var(--green-soft);transform:translateY(-1px);box-shadow:0 5px 14px rgba(18,61,40,.14)}
+.tb-guide:active{transform:scale(.96)}
 
 /* ============ 冰箱类型选择操作卡片 ============ */
 .model-action-card{display:flex;align-items:center;gap:11px;margin:10px 0 12px;padding:14px;border-radius:19px;background:linear-gradient(135deg,#D8EADF,#EBF6EE);border:1px solid #BED9C8;box-shadow:0 8px 22px rgba(18,61,40,.10),inset 0 1px 0 rgba(255,255,255,.9);transition:transform .25s ease,box-shadow .25s ease}
@@ -480,14 +494,6 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 /* 冰箱选择面板平滑入场 */
 .model-modal{animation:modelIn .28s cubic-bezier(.2,.9,.2,1) both}
 @keyframes modelIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
-
-/* ============ 设置弹窗 ============ */
-.settings-item{width:100%;display:flex;align-items:center;gap:11px;text-align:left;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:13px;transition:.2s}
-.settings-item:hover,.settings-item:active{background:var(--green-soft);border-color:#BED9C8;transform:translateY(-1px)}
-.si-ico{width:36px;height:36px;flex:none;border-radius:10px;background:#fff;display:grid;place-items:center;font-size:18px;color:var(--green-deep)}
-.settings-item b{display:block;font-size:14px}
-.settings-item small{display:block;font-size:13px;color:var(--muted);margin-top:3px}
-.si-arrow{font-size:20px;color:#9AA79F}
 
 /* ============ 临期食材每日提醒弹窗 ============ */
 .daily-expiry-card{max-width:360px}
@@ -566,8 +572,10 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
   .app-outer-bar{display:none}
   .modal-overlay{padding:12px}
   .modal-card{max-width:100%;border-radius:18px;padding:18px}
-  .tb-setting{width:32px;height:32px}
-  .tb-status{max-width:148px;font-size:12px;padding:5px 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .tb-guide{min-height:32px;padding:3px 8px;font-size:11px}
+  .tb-status{max-width:140px;font-size:12px;padding:5px 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .scroll-rail{top:calc(66px + env(safe-area-inset-top, 0px));bottom:calc(88px + env(safe-area-inset-bottom, 0px))}
+  .scroll-cue{bottom:calc(88px + env(safe-area-inset-bottom, 0px))}
   .model-action-card{flex-direction:column;align-items:stretch;gap:10px}
   .mac-actions{flex-direction:row;align-items:center;justify-content:space-between}
   .mac-primary{flex:1}
