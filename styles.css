@@ -491,7 +491,8 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .tour-root.closing{animation:fadeOut .24s ease both}
 @keyframes fadeOut{from{opacity:1}to{opacity:0}}
 .tour-spotlight{position:fixed;z-index:111;opacity:0;border:2px solid rgba(255,255,255,.96);border-radius:20px;box-shadow:0 0 0 9999px rgba(10,26,17,.58),0 8px 30px rgba(0,0,0,.18);pointer-events:none;transition:left .38s cubic-bezier(.2,.8,.2,1),top .38s cubic-bezier(.2,.8,.2,1),width .38s cubic-bezier(.2,.8,.2,1),height .38s cubic-bezier(.2,.8,.2,1),opacity .2s ease}
-.tour-card{position:fixed;z-index:112;background:#fff;border-radius:18px;padding:18px 18px 16px;box-shadow:0 24px 60px rgba(0,0,0,.28);transition:left .38s cubic-bezier(.2,.8,.2,1),top .38s cubic-bezier(.2,.8,.2,1),width .38s cubic-bezier(.2,.8,.2,1)}
+.tour-card{position:fixed;z-index:112;background:#fff;border-radius:18px;padding:18px 18px 16px;box-shadow:0 24px 60px rgba(0,0,0,.28);transition:left .38s cubic-bezier(.2,.8,.2,1),top .38s cubic-bezier(.2,.8,.2,1),width .38s cubic-bezier(.2,.8,.2,1),opacity .2s ease}
+.tour-card.waiting{opacity:0;pointer-events:none}
 .tour-card.step-in{animation:tourCardIn .28s ease both}
 @keyframes tourCardIn{from{opacity:.5;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
 .tour-skip{position:absolute;top:9px;right:12px;min-height:32px;padding:4px 6px;color:#6B7C72;font-size:13px;font-weight:700}
