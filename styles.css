@@ -63,9 +63,12 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .app-topbar{position:absolute;top:0;left:0;right:0;height:58px;z-index:7;display:flex;align-items:center;gap:10px;padding:0 18px;pointer-events:none;color:var(--ink);background:rgba(255,255,255,.58);backdrop-filter:blur(8px) saturate(130%);-webkit-backdrop-filter:blur(8px) saturate(130%);border-bottom:1px solid rgba(255,255,255,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.6);transition:background .28s ease,box-shadow .28s ease,backdrop-filter .28s ease}
 .app-topbar.scrolled{background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.78));backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border-bottom-color:rgba(255,255,255,.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 8px 26px rgba(18,61,40,.12)}
 .tb-back{pointer-events:auto;flex:none;min-height:36px;padding:5px 12px 5px 8px;border-radius:999px;background:#fff;border:1px solid #C9DDCF;color:var(--green-deep);font-size:13px;font-weight:800;box-shadow:0 2px 8px rgba(18,61,40,.10)}
+.tb-back.subtle{background:transparent;border-color:transparent;box-shadow:none;color:#6B7C72;padding-left:2px}
 .app-topbar.scrolled .tb-back{border-color:#B9D8C4;box-shadow:0 3px 10px rgba(18,61,40,.14)}
-.tb-title{flex:1;font-size:15px;font-weight:800;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tb-status{pointer-events:auto;display:inline-flex;align-items:center;gap:6px;flex:none;min-height:34px;padding:5px 11px;border-radius:999px;font-size:13px;font-weight:700;background:var(--green-soft);color:var(--green-deep);transition:.25s}
+.app-topbar.scrolled .tb-back.subtle{border-color:transparent;box-shadow:none}
+.tb-title{flex:1 1 auto;min-width:0;font-size:15px;font-weight:800;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app-topbar.has-back .tb-title{flex:0 1 auto;max-width:82px}
+.tb-status{pointer-events:auto;display:inline-flex;align-items:center;gap:6px;flex:0 1 auto;min-width:0;max-width:46%;min-height:34px;padding:5px 11px;border-radius:999px;font-size:13px;font-weight:700;background:var(--green-soft);color:var(--green-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:.25s}
 .tb-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
 .tb-dot.warn{background:var(--red)}
 .page-wrap.entering{animation:pageIn .32s cubic-bezier(.2,.8,.2,1) both}
@@ -85,7 +88,7 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .app-hero::after{content:"";position:absolute;right:-30px;top:-30px;width:130px;height:130px;border-radius:50%;background:rgba(29,185,84,.07)}
 .app-hero h2{font-size:18px;position:relative}
 .app-hero p{font-size:14px;color:#5C7163;margin-top:4px;position:relative}
-.sec-title{font-size:14px;font-weight:700;margin:16px 0 10px;display:flex;align-items:center;justify-content:space-between}
+.sec-title{font-size:14px;font-weight:700;margin:10px 0 5px;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .sec-title .more{font-size:14px;color:#6B7C72;font-weight:500}
 .sec-title button.more{border:0;background:none;cursor:pointer;min-height:44px;padding:4px 0 4px 10px;color:var(--green-deep);font-weight:700}
 .card{background:var(--card);border-radius:16px;padding:14px;box-shadow:0 3px 14px rgba(20,50,30,.05);border:1px solid var(--line)}
@@ -298,6 +301,8 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .expiring-tip{background:var(--yellow-soft);border:1px solid #F6E3A6;border-radius:12px;padding:10px 12px;font-size:13px;color:var(--yellow-deep);margin:12px 0;display:flex;gap:8px;align-items:center}
 .step-item{display:flex;gap:10px;margin-bottom:10px;font-size:13px;line-height:1.6;color:var(--ink-2)}
 .step-num{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:13px;flex:none}
+.back-link{display:inline-flex;align-items:center;gap:4px;min-height:40px;margin:0 0 12px;padding:8px 14px;border-radius:999px;background:#fff;border:1px solid #C9DDCF;color:var(--green-deep);font-size:13px;font-weight:800;box-shadow:0 2px 8px rgba(18,61,40,.08)}
+.back-link:hover{background:var(--green-soft);border-color:#B9D8C4}
 .video-mini{display:inline-block;margin:5px 0 0 6px;font-size:12px;font-weight:800;color:var(--red-deep);background:var(--red-soft);border-radius:999px;padding:3px 8px}
 .video-card{display:flex;align-items:center;gap:11px;margin-top:2px;padding:13px;border-radius:14px;background:linear-gradient(135deg,#FFE9E9,#FFF5F0);border:1px solid #F0C9C5;color:var(--ink);text-decoration:none;transition:.2s}
 .video-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(180,55,55,.14);border-color:#E8A9A4}
@@ -319,7 +324,7 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .r-status.done{background:var(--green-soft);color:var(--green-deep)}
 .r-status.skip{background:#EEF2EF;color:var(--muted)}
 .source-tag{font-size:13px;padding:2px 6px;border-radius:5px;background:#F0F4F1;color:var(--ink-2)}
-.cart-bar{position:sticky;bottom:0;background:rgba(247,250,248,.96);backdrop-filter:blur(8px);padding:10px 0 4px;margin-top:8px}
+.cart-bar{position:sticky;bottom:76px;z-index:7;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:16px;padding:10px 12px;margin-top:10px;box-shadow:0 -4px 18px rgba(18,61,40,.10);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .summary-line{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-2);margin-bottom:8px}
 
 /* 商品 / 购物车 */
@@ -476,7 +481,7 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .tb-guide:active{transform:scale(.96)}
 
 /* ============ 冰箱类型选择操作卡片 ============ */
-.model-action-card{display:flex;align-items:center;gap:11px;margin:10px 0 12px;padding:14px;border-radius:19px;background:linear-gradient(135deg,#D8EADF,#EBF6EE);border:1px solid #BED9C8;box-shadow:0 8px 22px rgba(18,61,40,.10),inset 0 1px 0 rgba(255,255,255,.9);transition:transform .25s ease,box-shadow .25s ease}
+.model-action-card{display:flex;align-items:center;gap:11px;margin:5px 0 10px;padding:14px;border-radius:19px;background:linear-gradient(135deg,#D8EADF,#EBF6EE);border:1px solid #BED9C8;box-shadow:0 8px 22px rgba(18,61,40,.10),inset 0 1px 0 rgba(255,255,255,.9);transition:transform .25s ease,box-shadow .25s ease}
 .model-action-card:hover{transform:translateY(-3px);box-shadow:0 15px 32px rgba(18,61,40,.16),inset 0 1px 0 rgba(255,255,255,.9)}
 .mac-ico{width:52px;height:52px;flex:none;border-radius:15px;background:#fff;color:var(--green-deep);display:grid;place-items:center;box-shadow:0 4px 12px rgba(18,61,40,.10)}
 .mac-ico svg{width:29px;height:29px}
@@ -496,8 +501,9 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 @keyframes modelIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
 
 /* ============ 临期食材每日提醒弹窗 ============ */
-.daily-expiry-card{max-width:360px}
-.daily-expiry-list{display:flex;flex-direction:column;gap:8px}
+.daily-expiry-card{max-width:360px;padding:0;overflow:hidden;display:flex;flex-direction:column}
+.daily-expiry-card .modal-head{position:sticky;top:0;z-index:2;margin:0;padding:18px 18px 12px;background:#fff;box-shadow:0 1px 0 var(--line)}
+.daily-expiry-list{display:flex;flex-direction:column;gap:8px;flex:1 1 auto;min-height:0;overflow-y:auto;padding:10px 18px 6px}
 .daily-expiry-row{display:flex;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px}
 .daily-expiry-row.urgent{background:var(--red-soft);border-color:#F3C8CA}
 .de-emoji{width:36px;height:36px;flex:none;border-radius:10px;background:#fff;display:grid;place-items:center;font-size:20px}
@@ -506,7 +512,8 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .de-meta{font-size:13px;color:#6B7C72;margin-top:3px}
 .de-days{font-size:13px;font-weight:800;color:var(--green-deep);white-space:nowrap}
 .daily-expiry-row.urgent .de-name,.daily-expiry-row.urgent .de-days{color:var(--red-deep)}
-.daily-expiry-actions{margin-top:14px}
+.daily-expiry-actions{position:sticky;bottom:0;z-index:2;margin:0;padding:12px 18px 18px;background:#fff;border-top:1px solid var(--line)}
+.daily-expiry-actions button{min-height:44px}
 
 /* ============ 新手引导教程 ============ */
 .tour-root{position:fixed;inset:0;z-index:110;display:none;pointer-events:auto}
@@ -574,6 +581,9 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
   .modal-card{max-width:100%;border-radius:18px;padding:18px}
   .tb-guide{min-height:32px;padding:3px 8px;font-size:11px}
   .tb-status{max-width:140px;font-size:12px;padding:5px 8px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .app-topbar.has-back .tb-title{max-width:70px}
+  .app-topbar.has-back .tb-status{max-width:34%}
+  .cart-bar{bottom:calc(86px + env(safe-area-inset-bottom, 0px))}
   .scroll-rail{top:calc(66px + env(safe-area-inset-top, 0px));bottom:calc(88px + env(safe-area-inset-bottom, 0px))}
   .scroll-cue{bottom:calc(88px + env(safe-area-inset-bottom, 0px))}
   .model-action-card{flex-direction:column;align-items:stretch;gap:10px}
