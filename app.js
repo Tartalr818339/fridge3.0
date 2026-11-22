@@ -135,8 +135,10 @@
 
   function renderTopbar(page) {
     const urgent = ITEMS.filter(i => i.remainingDays <= 2).length;
-    topbarEl.className = 'app-topbar' + (appEl.scrollTop > 8 ? ' scrolled' : '');
-    const back = page === 'home' ? '' : `<button class="tb-back" data-go="home">‹ 首页</button>`;
+    topbarEl.className = 'app-topbar' + (appEl.scrollTop > 8 ? ' scrolled' : '') + (page === 'home' ? '' : ' has-back');
+    const backTarget = page === 'recipe' ? 'recipes' : (page === 'product' || page === 'cart') ? 'restock' : 'home';
+    const backLabel = (page === 'recipe' || page === 'product' || page === 'cart') ? '返回' : '首页';
+    const back = page === 'home' ? '' : `<button class="tb-back${page === 'recipe' ? ' subtle' : ''}" data-go="${backTarget}">‹ ${backLabel}</button>`;
     topbarEl.innerHTML = `${back}<div class="tb-title">${PAGE_TITLES[page] || '鲜知'}</div>
       <button class="tb-status" data-go="fridge"><span class="tb-dot${urgent ? ' warn' : ''}"></span>${ITEMS.length} 件食材${urgent ? ` · ${urgent} 件快到期` : ''}</button>
       <button class="tb-guide" data-action="tour-restart" aria-label="重新查看新手教程">🧭<span>教程</span></button>`;
@@ -145,7 +147,7 @@
   function updateScrollHint() {
     if (!scrollRail || !scrollCue) return;
     const max = Math.max(0, appEl.scrollHeight - appEl.clientHeight);
-    const scrollable = max > 12;
+    const scrollable = max > 72;
     scrollRail.classList.toggle('active', scrollable);
     if (!scrollable) {
       scrollCue.classList.add('hidden');
@@ -393,7 +395,7 @@
 
   function pageRecipe() {
     const r = RECIPES.find(x => x.id === STATE.recipeId) || RECIPES[0];
-    return `<button class="muted" data-go="recipes" style="margin-bottom:10px;font-size:13px">‹ 返回食谱列表</button>
+    return `<button class="back-link" data-go="recipes">‹ 返回食谱列表</button>
       <div class="recipe-banner" style="background:${r.thumb}"><span class="rb-emoji">${r.emoji}</span><h2>${esc(r.name)}</h2><p>⏱ ${r.minutes} 分钟 · 5 星好评</p></div>
       ${r.expiring.length ? `<div class="expiring-tip">⏰ <span>用得快到期的食材：<b>${r.expiring.map(esc).join('、')}</b>，今天做正合适</span></div>` : ''}
       <div class="sec-title">所需食材 <span class="more">标注「已有 / 需补充」</span></div>
@@ -1138,7 +1140,7 @@
     closeModal(); renderApp(); announceAdded(added);
   }
 
-  // 添加食材弹窗：拍照 / 手动 / 一句话 三种方式，各自都有单件与批量
+  // 添加食材弹窗：拍照固定批量，手动可选单件/批量，一句话不做单批量切换
   let addMode = 'manual';
   let addBatch = false;
   let voiceRecognition = null;
@@ -1186,16 +1188,14 @@
   }
 
   function addPanelHtml() {
-    if (addBatch) {
-      if (addMode === 'photo') {
-        return `<div class="add-camera">
-            <label for="af-photos"><span class="ac-orb">📷</span><p>一次选多张食材照片，批量识别入库</p></label>
-            <input type="file" id="af-photos" accept="image/*" capture="environment" multiple />
-          </div>
-          <div class="add-preview" id="ap-preview"></div>`;
-      }
-      return batchPanel();
+    if (addMode === 'photo') {
+      return `<div class="add-camera">
+          <label for="af-photos"><span class="ac-orb">📷</span><p>上传 1 张或多张食材照片，都能识别入库</p></label>
+          <input type="file" id="af-photos" accept="image/*" capture="environment" multiple />
+        </div>
+        <div class="add-preview" id="ap-preview"></div>`;
     }
+    if (addMode === 'manual' && addBatch) return batchPanel();
     if (addMode === 'manual') {
       const layers = currentLayers();
       const defaultLayer = layers[0];
@@ -1218,37 +1218,24 @@
         <div class="add-field"><label>保质期（天）</label><input id="af-days" type="number" min="0" value="7" /></div>`;
     }
     if (addMode === 'text') return textAddPanel();
-    return `<div class="add-camera">
-        <label for="af-photo"><span class="ac-orb">📷</span><p>拍下食材或包装，自动识别食材名称和数量</p></label>
-        <input type="file" id="af-photo" accept="image/*" capture="environment" />
-      </div>
-      <div class="add-preview" id="ap-preview"></div>`;
+    return batchPanel();
   }
   function addSubtitle() {
-    if (addBatch) return '一次记多件，确认后一起入库';
-    if (addMode === 'photo') return '拍下食材或包装，自动识别';
+    if (addMode === 'photo') return '上传 1 张或多张照片，自动识别入库';
+    if (addMode === 'manual' && addBatch) return '一次记多件，确认后一起入库';
     if (addMode === 'manual') return '手动填写，也可以点话筒说出来';
     return '说一句或写一句，自动拆成食材';
   }
   function addPrimaryLabel() {
-    return (addBatch || addMode === 'text') ? '识别食材' : '确认添加';
+    if (addMode === 'photo') return '识别并入库';
+    return (addMode === 'text' || (addMode === 'manual' && addBatch)) ? '识别食材' : '确认添加';
   }
   function bindAddPanel() {
-    if (addMode === 'photo' && !addBatch) {
-      const file = $('#af-photo');
-      if (file) file.addEventListener('change', () => {
-        const pv = $('#ap-preview'); pv.style.display = 'block';
-        pv.innerHTML = '<div style="font-size:13px;color:var(--muted);margin-bottom:6px">🔍 识别到以下食材：</div>' +
-          [['全脂牛奶','1 盒','冷藏室上层'],['吐司面包','1 袋','冷藏室上层']].map(x => `<div class="ap-row"><span>🥗</span><span>${x[0]}</span><b>${x[1]}</b></div>`).join('') +
-          '<div style="font-size:13px;color:var(--green-deep);margin-top:6px">点击「确认添加」将识别结果入库</div>';
-        pv.dataset.photo = '1';
-      });
-    }
-    if (addMode === 'photo' && addBatch) {
+    if (addMode === 'photo') {
       const files = $('#af-photos');
       if (files) files.addEventListener('change', () => {
         const pv = $('#ap-preview'); pv.style.display = 'block';
-        pv.innerHTML = '<div style="font-size:13px;color:var(--muted);margin-bottom:6px">🔍 多张照片识别到 3 样食材：</div>' +
+        pv.innerHTML = '<div style="font-size:13px;color:var(--muted);margin-bottom:6px">🔍 照片识别到 3 样食材：</div>' +
           [['鲜鸡蛋','6 枚','冷藏室中层'],['全脂牛奶','1 盒','冷藏室上层'],['番茄','4 个','果蔬抽屉']].map(x => `<div class="ap-row"><span>🥗</span><span>${x[0]}</span><b>${x[1]}</b></div>`).join('');
         pv.dataset.photoBatch = '1';
       });
@@ -1285,10 +1272,10 @@
           <button class="add-tab ${addMode==='photo'?'active':''}" data-action="add-tab" data-mode="photo">📷 拍照</button>
           <button class="add-tab ${addMode==='text'?'active':''}" data-action="add-tab" data-mode="text">💬 一句话</button>
         </div>
-        <div class="batch-toggle">
+        ${addMode === 'manual' ? `<div class="batch-toggle">
           <button class="batch-seg ${!addBatch?'active':''}" data-action="add-batch" data-batch="single">单件</button>
           <button class="batch-seg ${addBatch?'active':''}" data-action="add-batch" data-batch="batch">批量</button>
-        </div>
+        </div>` : ''}
         <div id="add-panel"></div>
         <div class="modal-actions" style="margin-top:14px">
           <button class="btn btn-ghost grow" data-action="close-app-layer">取消</button>
@@ -1321,6 +1308,25 @@
     return { name, layer: targetLayer };
   }
   function addSave() {
+    if (addMode === 'photo') {
+      const pv = $('#ap-preview');
+      if (!pv || !pv.dataset.photoBatch) { toast('请先上传食材照片'); return; }
+      const added = [
+        addNewItem('鲜鸡蛋', 6, '枚', '冷藏室中层', 8, true),
+        addNewItem('全脂牛奶', 1, '盒', '冷藏室上层', 8, true),
+        addNewItem('番茄', 4, '个', '果蔬抽屉', 7, true)
+      ];
+      closeModal(); announceAdded(added);
+      return;
+    }
+    if (addMode === 'text') {
+      entryParse(($('#ai-food-input') && $('#ai-food-input').value) || '');
+      return;
+    }
+    if (addMode === 'manual' && addBatch) {
+      batchParse(($('#batch-input') && $('#batch-input').value) || '');
+      return;
+    }
     if (addMode === 'manual') {
       const name = $('#af-name') && $('#af-name').value;
       const qty = +($('#af-qty') && $('#af-qty').value || 1);
@@ -1328,35 +1334,6 @@
       const layer = ($('#af-layer') && $('#af-layer').dataset.layer) || '冷藏室上层';
       const days = +($('#af-days') && $('#af-days').value || 7);
       if (addNewItem(name, qty, unit, layer, days)) closeModal();
-      return;
-    }
-    if (addBatch) {
-      if (addMode === 'photo') {
-        const pv = $('#ap-preview');
-        if (!pv || !pv.dataset.photoBatch) { toast('请先选好多张食材照片'); return; }
-        const added = [
-          addNewItem('鲜鸡蛋', 6, '枚', '冷藏室中层', 8, true),
-          addNewItem('全脂牛奶', 1, '盒', '冷藏室上层', 8, true),
-          addNewItem('番茄', 4, '个', '果蔬抽屉', 7, true)
-        ];
-        closeModal(); announceAdded(added);
-      } else {
-        batchParse(($('#batch-input') && $('#batch-input').value) || '');
-      }
-      return;
-    }
-    if (addMode === 'text') {
-      entryParse(($('#ai-food-input') && $('#ai-food-input').value) || '');
-      return;
-    }
-    if (addMode === 'photo') {
-      const pv = $('#ap-preview');
-      if (!pv || !pv.dataset.photo) { toast('请先拍照 / 上传食材照片'); return; }
-      const added = [
-        addNewItem('全脂牛奶', 1, '盒', '冷藏室上层', 8, true),
-        addNewItem('吐司面包', 1, '袋', '冷藏室上层', 7, true)
-      ];
-      closeModal(); announceAdded(added);
     }
   }
 
@@ -1682,7 +1659,7 @@
         return;
       }
       if (a === 'batch-confirm') { batchConfirm(); return; }
-      if (a === 'add-tab') { addMode = actionEl.dataset.mode; renderAddPanel(); return; }
+      if (a === 'add-tab') { addMode = actionEl.dataset.mode; addBatch = false; renderAddPanel(); return; }
       if (a === 'pick-layer') {
         const box = actionEl.closest('#af-layer');
         if (box) {
