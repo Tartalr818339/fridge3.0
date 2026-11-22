@@ -184,7 +184,11 @@
     const thumbPct = Math.max(12, Math.min(60, appEl.clientHeight / appEl.scrollHeight * 100));
     thumb.style.height = `${thumbPct}%`;
     thumb.style.top = `${(appEl.scrollTop / max) * (100 - thumbPct)}%`;
-    scrollCue.textContent = STATE.appPage === 'home' ? '下滑查看冰箱分区 ↓' : '下滑查看更多 ↓';
+    if (max <= 120 || STATE.appPage !== 'home') {
+      scrollCue.classList.add('hidden');
+      return;
+    }
+    scrollCue.textContent = '下滑查看冰箱分区 ↓';
     scrollCue.classList.toggle('hidden', appEl.scrollTop > 36 || appEl.scrollTop >= max - 8);
   }
 
@@ -523,8 +527,7 @@
       <div class="setting-row"><span class="sr-ico">📶</span><div><div class="sr-title">Wi-Fi 连接</div><div class="sr-sub">${esc(d.wifi)} · 已配网</div></div><button class="mini-btn" data-action="go-pairing">重新配网</button></div>
       <div class="setting-row"><span class="sr-ico">📡</span><div><div class="sr-title">碰一碰</div><div class="sr-sub">${d.nfcBound ? '已开启 · 手机靠近冰箱感应区即可查看' : '未开启 · 请靠近冰箱感应区'}</div></div><div class="switch ${d.nfcBound ? 'on' : ''}" data-action="toggle-nfc"></div></div>
       <div class="setting-row"><span class="sr-ico">⚙️</span><div><div class="sr-title">系统版本</div><div class="sr-sub">${esc(d.firmware)} · ${d.firmwareLatest ? '已是最新版本' : '有可用更新'}</div></div></div>
-      <div class="setting-row"><span class="sr-ico">🧊</span><div><div class="sr-title">冰箱型号</div><div class="sr-sub">${esc(currentModel().name)} · ${currentLayers().length} 个分区</div></div><button class="mini-btn" data-action="fridge-model">更换</button></div>
-      <button class="btn btn-ghost btn-block" data-action="simulate-nfc" style="margin-top:12px">碰一碰，查看冰箱食材</button>`;
+      <div class="setting-row"><span class="sr-ico">🧊</span><div><div class="sr-title">冰箱型号</div><div class="sr-sub">${esc(currentModel().name)} · ${currentLayers().length} 个分区</div></div><button class="mini-btn" data-action="fridge-model">更换</button></div>`;
   }
 
   function emojiFor(name) {
