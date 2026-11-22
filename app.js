@@ -27,6 +27,7 @@
   const toastRoot = $('#toast-root');
   const scrollRail = $('#scroll-rail');
   const scrollCue = $('#scroll-cue');
+  const dockRoot = $('#dock-root');
 
   // 分区图标用 SVG，避免 emoji 在某些设备渲染成方框
   function layerIcon(layer) {
@@ -135,13 +136,39 @@
 
   function renderTopbar(page) {
     const urgent = ITEMS.filter(i => i.remainingDays <= 2).length;
+    const statusText = urgent ? `${ITEMS.length} 件 · ${urgent} 临期` : `${ITEMS.length} 件`;
     topbarEl.className = 'app-topbar' + (appEl.scrollTop > 8 ? ' scrolled' : '') + (page === 'home' ? '' : ' has-back');
     const backTarget = page === 'recipe' ? 'recipes' : (page === 'product' || page === 'cart') ? 'restock' : 'home';
     const backLabel = (page === 'recipe' || page === 'product' || page === 'cart') ? '返回' : '首页';
     const back = page === 'home' ? '' : `<button class="tb-back${page === 'recipe' ? ' subtle' : ''}" data-go="${backTarget}">‹ ${backLabel}</button>`;
     topbarEl.innerHTML = `${back}<div class="tb-title">${PAGE_TITLES[page] || '鲜知'}</div>
-      <button class="tb-status" data-go="fridge"><span class="tb-dot${urgent ? ' warn' : ''}"></span>${ITEMS.length} 件食材${urgent ? ` · ${urgent} 件快到期` : ''}</button>
-      <button class="tb-guide" data-action="tour-restart" aria-label="重新查看新手教程">🧭<span>教程</span></button>`;
+      <div class="tb-actions">
+        <button class="tb-status" data-go="fridge"><span class="tb-dot${urgent ? ' warn' : ''}"></span>${statusText}</button>
+        <button class="tb-guide" data-action="tour-restart" aria-label="重新查看新手教程">🧭<span>教程</span></button>
+      </div>`;
+  }
+
+  function renderDock(page) {
+    if (!dockRoot) return;
+    if (page === 'restock') {
+      const selected = STATE.restock.filter(r => STATE.checked.has(r.id));
+      dockRoot.innerHTML = `<div class="cart-bar">
+        <div class="summary-line"><span>已勾选 <b>${selected.length}</b> 项 · 购物车 ${STATE.cart.length} 件</span><span class="muted">冰箱里还有的会提醒你</span></div>
+        <div class="row" style="gap:8px">
+          <button class="btn btn-ghost grow" data-go="cart">查看购物车</button>
+          <button class="btn btn-primary grow" data-action="restock-add-cart">加入购物车</button>
+        </div>
+      </div>`;
+      return;
+    }
+    if (page === 'cart') {
+      dockRoot.innerHTML = `<div class="cart-bar">
+        <button class="btn btn-primary btn-block" data-action="checkout">${STATE.cart.length ? '确认下单 · 食材自动入库' : '去挑点食材吧'}</button>
+        <button class="btn btn-ghost btn-block" data-go="restock" style="margin-top:8px">继续逛补货清单</button>
+      </div>`;
+      return;
+    }
+    dockRoot.innerHTML = '';
   }
 
   function updateScrollHint() {
@@ -184,6 +211,8 @@
       appEl.innerHTML = `<div class="page-wrap${pageChanged ? ' entering' : ''}">${html}</div>`;
       if (pageChanged) { appEl.scrollTop = 0; lastPage = page; }
       renderTopbar(page);
+      renderDock(page);
+      appEl.classList.toggle('has-dock', page === 'restock' || page === 'cart');
       const active = (page === 'recipe') ? 'recipes'
         : (page === 'product' || page === 'cart') ? 'restock'
         : (page === 'fridge' || page === 'nfc') ? 'home' : page;
@@ -418,7 +447,6 @@
 
   function pageRestock() {
     const list = STATE.restock;
-    const selected = list.filter(r => STATE.checked.has(r.id));
     return `<div class="app-hero"><h2>补货清单</h2><p>冰箱里缺的都在这里，买完回来更新</p></div>
       <button class="pupu-entry" data-action="pupu-open">
         <span class="pu-logo">朴</span>
@@ -442,12 +470,6 @@
       <div class="row" style="gap:8px;flex-wrap:wrap">
         ${PRODUCTS.slice(0,4).map(p => `<button class="chip" data-product="${p.sku}" style="font-size:13px">${p.emoji} ${esc(p.name)}</button>`).join('')}
       </div>
-      <div class="cart-bar">
-        <div class="summary-line"><span>已勾选 <b>${selected.length}</b> 项 · 购物车 ${STATE.cart.length} 件</span><span class="muted">冰箱里还有的会提醒你</span></div>
-        <div class="row" style="gap:8px">
-          <button class="btn btn-ghost grow" data-go="cart">查看购物车</button>
-          <button class="btn btn-primary grow" data-action="restock-add-cart">加入购物车</button>
-        </div>
       </div>`;
   }
 
@@ -484,11 +506,7 @@
           </div>
           <div class="qty-ctrl"><button data-action="cart-qty" data-idx="${idx}" data-d="-1">−</button><span>${c.qty}</span><button data-action="cart-qty" data-idx="${idx}" data-d="1">+</button></div>
         </div>`;
-      }).join('') : `<div class="card" style="text-align:center;padding:30px;color:var(--muted)">购物车是空的，去补货清单看看？</div>`}
-      <div class="cart-bar">
-        <button class="btn btn-primary btn-block" data-action="checkout">${STATE.cart.length ? '确认下单 · 食材自动入库' : '去挑点食材吧'}</button>
-        <button class="btn btn-ghost btn-block" data-go="restock" style="margin-top:8px">继续逛补货清单</button>
-      </div>`;
+      }).join('') : `<div class="card" style="text-align:center;padding:30px;color:var(--muted)">购物车是空的，去补货清单看看？</div>`}`;
   }
 
   function pageDevice() {
