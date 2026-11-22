@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#123D28" />
+  <title>鲜知 FreshSense 3.0 · 手机 App</title>
+  <link rel="stylesheet" href="./styles.css?v=40" />
+</head>
+<body>
+  <div class="app-stage">
+    <div class="phone-frame">
+      <div id="app-topbar" class="app-topbar"><!-- JS renders --></div>
+      <div id="app-content" class="app-content"><!-- JS renders --></div>
+      <div id="app-tabbar" class="app-tabbar"><!-- JS renders --></div>
+    </div>
+  </div>
+
+  <div class="app-outer-bar">
+    <span class="outer-brand"><img src="./assets/logo.svg?v=5" alt="鲜知" />鲜知 FreshSense 3.0 · 手机 App</span>
+    <div class="app-outer-actions">
+      <span class="outer-hint">页面预览请用手机内底部导航</span>
+      <button class="chip" data-app-route="nfc">碰一碰</button>
+      <button class="chip" id="btn-reset">重置数据</button>
+    </div>
+  </div>
+
+  <div id="modal-root"></div>
+  <div id="toast-root" class="toast-root"></div>
+
+  <script src="./data.js?v=40"></script>
+  <script src="./app.js?v=40"></script>
+</body>
+</html>
