@@ -51,7 +51,7 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
   box-shadow:0 24px 50px rgba(0,0,0,.22),inset 0 0 0 2px #2B3A31;
   overflow:hidden;display:flex;flex-direction:column;
 }
-.app-content{flex:1;overflow-y:auto;scrollbar-width:none;padding:58px 16px 108px;-webkit-overflow-scrolling:touch}
+.app-content{flex:1;overflow-y:auto;scrollbar-width:none;padding:58px 16px 128px;-webkit-overflow-scrolling:touch}
 .app-content::-webkit-scrollbar{display:none}
 .app-topbar{position:absolute;top:0;left:0;right:0;height:58px;z-index:7;display:flex;align-items:center;gap:10px;padding:0 18px;pointer-events:none;color:var(--ink);background:rgba(255,255,255,.58);backdrop-filter:blur(8px) saturate(130%);-webkit-backdrop-filter:blur(8px) saturate(130%);border-bottom:1px solid rgba(255,255,255,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.6);transition:background .28s ease,box-shadow .28s ease,backdrop-filter .28s ease}
 .app-topbar.scrolled{background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.78));backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border-bottom-color:rgba(255,255,255,.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 8px 26px rgba(18,61,40,.12)}
@@ -90,6 +90,10 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .pill-tag.yellow{background:var(--yellow-soft);color:var(--yellow-deep)}
 .pill-tag.red{background:var(--red-soft);color:var(--red-deep)}
 .pill-tag.gray{background:#EEF2EF;color:var(--ink-2)}
+.priority-tag{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:800;color:var(--yellow-deep);background:#FFF3CF;border:1px solid #E8D18C;border-radius:999px;padding:2px 7px;white-space:nowrap}
+.priority-tag.expired{color:var(--red-deep);background:var(--red-soft);border-color:#F1C3C6}
+.expiry-mini-row .priority-tag{font-size:11px;padding:1px 6px}
+.de-meta .priority-tag{font-size:11px;padding:1px 6px}
 
 /* 概览四层 */
 .layer-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -154,8 +158,8 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .fv-bar i.yellow{background:var(--yellow)}
 .fv-bar i.red{background:var(--red)}
 .fv-bar i.empty{background:transparent}
-.fv-count{font-size:13px;font-weight:700;color:var(--ink-2);flex:none;text-align:right;min-width:46px}
-.fv-count em{display:block;font-size:12px;font-style:normal;color:var(--red-deep)}
+.fv-count{font-size:13px;font-weight:700;color:var(--ink-2);flex:none;text-align:right;min-width:88px}
+.fv-count em{display:block;font-size:12px;font-style:normal;color:var(--red-deep);white-space:nowrap}
 .fv-arrow{font-size:20px;color:#9AA79F;flex:none}
 
 /* 冰箱食材库（手机端） */
@@ -365,6 +369,10 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .modal-actions button{flex:1;padding:12px;border-radius:12px;font-size:13px;font-weight:700}
 .toast-root{position:fixed;top:22px;left:50%;transform:translateX(-50%);z-index:80;display:flex;flex-direction:column;gap:8px;align-items:center}
 .toast{background:var(--ink);color:#fff;font-size:13px;padding:10px 18px;border-radius:999px;box-shadow:0 10px 26px rgba(0,0,0,.25);animation:rise .2s ease}
+.toast-action{display:flex;align-items:center;gap:12px;padding:9px 10px 9px 16px;border-radius:13px;max-width:min(92vw,360px)}
+.toast-action button{flex:none;min-height:30px;padding:5px 11px;border-radius:9px;background:#fff;color:var(--green-deep);font-size:13px;font-weight:800}
+.just-added{animation:addedPulse 2.6s ease}
+@keyframes addedPulse{0%,100%{box-shadow:none}12%,60%{box-shadow:0 0 0 3px rgba(29,185,84,.38),0 8px 20px rgba(29,185,84,.18)}35%{box-shadow:0 0 0 5px rgba(29,185,84,.18),0 8px 20px rgba(29,185,84,.12)}}
 
 /* ============ 触屏可读性：正文 ≥13px ============ */
 [data-go].muted,[data-go].mini-btn,.ai-chip,.chip,.expire-chip{min-height:34px;display:inline-flex;align-items:center}
@@ -405,8 +413,17 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 
 /* ============ 添加食材弹窗 ============ */
 .add-tabs{display:flex;gap:5px;margin-bottom:9px}
-.add-tab{flex:1;min-width:0;padding:9px 2px;border-radius:10px;background:var(--paper);font-size:12.5px;font-weight:700;color:var(--ink-2);white-space:nowrap}
+.add-tab{flex:1;min-width:0;padding:9px 2px;border-radius:10px;background:var(--paper);font-size:12.5px;font-weight:700;color:var(--ink-2);white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:3px}
+.add-tab i{font-style:normal;font-size:10px;padding:1px 4px;border-radius:999px;background:rgba(29,185,84,.12);color:var(--green-deep);font-weight:800}
 .add-tab.active{background:var(--green);color:#fff}
+.add-tab.active i{background:rgba(255,255,255,.26);color:#fff}
+.add-quick{display:flex;gap:8px;margin-bottom:12px}
+.aq-btn{flex:1;min-height:42px;border-radius:12px;border:1px solid #BED9C8;background:linear-gradient(135deg,#E8F7EE,#F4FBF6);color:var(--green-deep);font-size:13px;font-weight:800;transition:.2s}
+.aq-btn:hover{background:#D7EDDF;transform:translateY(-1px);box-shadow:0 5px 14px rgba(18,61,40,.10)}
+.layer-picker{display:flex;flex-wrap:wrap;gap:6px}
+.layer-chip{min-height:36px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--ink-2);font-size:12.5px;font-weight:700;transition:.2s}
+.layer-chip:hover{border-color:#BED9C8;background:var(--green-soft)}
+.layer-chip.active{background:var(--green-soft);border-color:var(--green);color:var(--green-deep);box-shadow:0 2px 8px rgba(29,185,84,.16)}
 .batch-toggle{display:flex;gap:4px;background:var(--paper);border-radius:10px;padding:3px;margin-bottom:12px}
 .batch-seg{flex:1;min-height:34px;border-radius:8px;font-size:13px;font-weight:700;color:var(--ink-2);background:transparent}
 .batch-seg.active{background:#fff;color:var(--green-deep);box-shadow:0 1px 5px rgba(18,61,40,.08)}
@@ -543,7 +560,7 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
   body{padding:0;gap:0;background:#F7FAF8;justify-content:flex-start}
   .app-stage{width:100%}
   .phone-frame{width:100vw;height:100dvh;border:none;border-radius:0;box-shadow:none}
-  .app-content{padding:calc(env(safe-area-inset-top, 0px) + 58px) 16px calc(env(safe-area-inset-bottom, 0px) + 90px)}
+  .app-content{padding:calc(env(safe-area-inset-top, 0px) + 58px) 16px calc(env(safe-area-inset-bottom, 0px) + 128px)}
   .app-topbar{height:calc(58px + env(safe-area-inset-top, 0px));padding-top:env(safe-area-inset-top, 0px)}
   .app-tabbar{padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 8px);height:calc(70px + env(safe-area-inset-bottom, 0px))}
   .app-outer-bar{display:none}
