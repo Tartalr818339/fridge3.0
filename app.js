@@ -125,9 +125,9 @@
   const TOUR_STEPS = [
     { title: '欢迎来到全新的鲜知', desc: '这是一个还没有数据的全新冰箱。跟着提示点一遍，完成一次完整探索。', page: 'home', target: '.phone-frame' },
     { title: '添加第一份食材', desc: '点这个入口，之后可以拍照、手动或一句话录入食材。', page: 'home', target: '.tab-add' },
-    { title: '先看临期提醒', desc: '这里按紧急程度排序；以后有快到期食材时，越靠前越该先吃掉。', page: 'home', target: '.alert-banner', autoScroll: true },
-    { title: '按位置找食材', desc: '冰箱分区按真实位置管理，冷藏、冷冻一目了然。', page: 'home', target: '.fridge-view.appliance', autoScroll: true },
-    { title: '匹配你的冰箱', desc: '点这里切换冰箱类型，让分区和你家冰箱一致。', page: 'home', target: '.mac-primary' },
+    { title: '先看临期提醒', desc: '这里按紧急程度排序；以后有快到期食材时，越靠前越该先吃掉。', page: 'home', homeModule: 'expiry', target: '.alert-banner', autoScroll: true },
+    { title: '按位置找食材', desc: '冰箱分区按真实位置管理，冷藏、冷冻一目了然。', page: 'home', homeModule: 'zones', target: '.fridge-view.appliance', autoScroll: true },
+    { title: '匹配你的冰箱', desc: '点这里切换冰箱类型，让分区和你家冰箱一致。', page: 'home', homeModule: 'zones', target: '.mac-primary' },
     { title: '看看今天吃什么', desc: '食谱会优先推荐能用掉临期食材的菜，点这里开始挑菜。', page: 'recipes', target: '.ai-entry' },
     { title: '把缺的加入补货', desc: '缺什么就在这里勾选补货，买完回来再更新冰箱。', page: 'restock', target: '.restock-item' },
     { title: '探索完成', desc: '你已经走完一遍核心流程。现在开始管理你的冰箱吧。', page: 'home', target: '.phone-frame' }
@@ -345,17 +345,13 @@
     </div>`;
   }
 
-  function pageHome() {
+  function homeExpiryModule() {
     const windows = expiryWindows();
     const soonItems = ITEMS.filter(i => i.remainingDays >= 0 && i.remainingDays <= 3);
     const sel = STATE.expiryDay;
     const dayItems = expiryItems();
-    const shown = dayItems.slice(0, 3);
-    return `<div class="app-hero">
-        <h2>早上好，今天想吃些什么</h2>
-        <p>冰箱里有 ${ITEMS.length} 件食材 · ${currentModel().name}</p>
-      </div>
-      <div class="alert-banner">
+    const shown = dayItems.slice(0, 2);
+    return `<div class="alert-banner">
         <span class="ab-ico">⏰</span>
         <div class="grow"><h4>这些食材快到期了（${soonItems.length} 件）</h4>
           <p>按紧急程度查看，越靠前越该先吃</p>
@@ -367,12 +363,45 @@
               <span class="em-ico">${i.icon}</span><span class="em-name">${esc(i.name)}</span>
               <span class="em-meta">${i.remainingDays === 0 ? '已过期' : '还剩 ' + i.remainingDays + ' 天'} · ${i.quantity}${esc(i.unit)}</span>${priorityTag(i)}
             </div>`).join('') : '<div class="expiry-none">这个范围内没有快到期的食材</div>'}
-            ${dayItems.length > 3 ? `<button class="expiry-more" data-action="expiry-all">查看全部 ${dayItems.length} 件 ›</button>` : ''}
+            ${dayItems.length > 2 ? `<button class="expiry-more" data-action="expiry-all">查看全部 ${dayItems.length} 件 ›</button>` : ''}
           </div>
         </div>
-      </div>
-      <div class="sec-title">冰箱分区 <button class="more" data-go="fridge">查看全部食材 ›</button></div>
+      </div>`;
+  }
+
+  function homeZoneModule() {
+    return `<div class="sec-title">冰箱分区 <button class="more" data-go="fridge">查看全部食材 ›</button></div>
       ${fridgeZoneView()}`;
+  }
+
+  function homeRecipeModule() {
+    return `<div class="sec-title">今日食谱 <button class="more" data-go="recipes">全部食谱 ›</button></div>
+      <div class="home-recipe-list">${RECIPES.slice(0, 2).map(r => `<button class="home-recipe" data-recipe="${r.id}">
+        <span class="hr-emoji" style="background:${r.thumb}">${r.emoji}</span>
+        <span class="grow"><b>${esc(r.name)}</b><small>⏱ ${r.minutes} 分钟 · ${r.ingredients.filter(x => x.have).length}/${r.ingredients.length} 食材已有</small></span>
+        <span class="hr-go">›</span>
+      </button>`).join('')}</div>`;
+  }
+
+  function pageHome() {
+    const soon = ITEMS.filter(i => i.remainingDays >= 0 && i.remainingDays <= 3).length;
+    const module = STATE.homeModule || 'expiry';
+    const renderModule = { expiry: homeExpiryModule, zones: homeZoneModule, recipes: homeRecipeModule }[module] || homeExpiryModule;
+    return `<div class="app-hero">
+        <h2>早上好，今天想吃些什么</h2>
+        <p>按模块查看，今天的重点一眼看清</p>
+      </div>
+      <div class="home-stats">
+        <button class="home-stat" data-go="fridge"><b>${ITEMS.length}</b><span>食材总数</span></button>
+        <button class="home-stat warn" data-action="home-module" data-module="expiry"><b>${soon}</b><span>临期食材</span></button>
+        <button class="home-stat recipe" data-go="recipes"><b>${RECIPES.length}</b><span>今日食谱</span></button>
+      </div>
+      <div class="module-switch">
+        <button class="module-tab ${module === 'expiry' ? 'active' : ''}" data-action="home-module" data-module="expiry">⏰ 临期</button>
+        <button class="module-tab ${module === 'zones' ? 'active' : ''}" data-action="home-module" data-module="zones">🧊 分区</button>
+        <button class="module-tab ${module === 'recipes' ? 'active' : ''}" data-action="home-module" data-module="recipes">🍳 食谱</button>
+      </div>
+      <div class="home-module">${renderModule()}</div>`;
   }
 
   // 手机端冰箱食材库：下单同步后可直接查看新入库食材
@@ -1432,13 +1461,15 @@
       restock: STATE.restock.map(x => ({ ...x })),
       cart: STATE.cart.map(x => ({ ...x })),
       checked: new Set(STATE.checked),
-      appPage: STATE.appPage
+      appPage: STATE.appPage,
+      homeModule: STATE.homeModule
     };
     ITEMS.splice(0, ITEMS.length);
     STATE.restock = [];
     STATE.cart = [];
     STATE.checked.clear();
     STATE.appPage = 'home';
+    STATE.homeModule = 'expiry';
   }
 
   function restoreTourDemo() {
@@ -1448,6 +1479,7 @@
     STATE.cart = tourSnapshot.cart.map(x => ({ ...x }));
     STATE.checked = new Set(tourSnapshot.checked);
     STATE.appPage = tourSnapshot.appPage;
+    STATE.homeModule = tourSnapshot.homeModule || 'expiry';
     tourSnapshot = null;
     renderApp();
   }
@@ -1517,7 +1549,9 @@
     if (!root || !tourActive) return;
     const token = ++tourStepToken;
     const step = TOUR_STEPS[tourStep];
-    if (step.page && STATE.appPage !== step.page) { STATE.appPage = step.page; renderApp(); }
+    if (step.homeModule) STATE.homeModule = step.homeModule;
+    if (step.page && STATE.appPage !== step.page) STATE.appPage = step.page;
+    renderApp();
     root.querySelector('.tour-count-current').textContent = String(tourStep + 1);
     root.querySelector('.tour-title').textContent = step.title;
     root.querySelector('.tour-desc').textContent = step.desc;
@@ -1724,6 +1758,7 @@
         toast(pending.length ? `已把 ${pending.length} 样加进购物车` : '清单里暂时没有可自动购买的商品');
         return;
       }
+      if (a === 'home-module') { STATE.homeModule = actionEl.dataset.module; renderApp(); return; }
       if (a === 'expiry-day') { STATE.expiryDay = +actionEl.dataset.day; renderApp(); return; }
       if (a === 'expiry-all') { showExpiryModal(expiryItems()); return; }
       if (a === 'pupu-open') { showPupuModal(); return; }
