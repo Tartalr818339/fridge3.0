@@ -142,7 +142,7 @@
     const urgent = ITEMS.filter(i => i.remainingDays <= 2).length;
     const statusText = urgent ? `${ITEMS.length} 件 · ${urgent} 临期` : `${ITEMS.length} 件`;
     // 菜谱详情/商品详情已在页面内提供返回按钮，顶栏不再重复显示
-    const backTarget = { cart: 'restock', nfc: 'device' }[page];
+    const backTarget = { cart: 'restock', nfc: 'device', fridge: 'home' }[page];
     topbarEl.className = 'app-topbar' + (appEl.scrollTop > 8 ? ' scrolled' : '') + (backTarget ? ' has-back' : '');
     const back = backTarget ? `<button class="tb-back" data-go="${backTarget}">‹ 返回</button>` : '';
     topbarEl.innerHTML = `${back}<div class="tb-title">${PAGE_TITLES[page] || '鲜知'}</div>
