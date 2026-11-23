@@ -67,8 +67,8 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .tb-back.subtle{background:transparent;border-color:transparent;box-shadow:none;color:#6B7C72;padding-left:2px}
 .app-topbar.scrolled .tb-back{border-color:#B9D8C4;box-shadow:0 3px 10px rgba(18,61,40,.14)}
 .app-topbar.scrolled .tb-back.subtle{border-color:transparent;box-shadow:none}
-.tb-title{flex:1 1 auto;min-width:0;font-size:15px;font-weight:800;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.app-topbar.has-back .tb-title{flex:0 1 auto;max-width:82px}
+.tb-title{flex:1 1 auto;min-width:0;font-size:15px;font-weight:800;letter-spacing:.2px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app-topbar.has-back .tb-title{flex:0 1 auto;max-width:120px}
 .tb-actions{display:flex;align-items:center;gap:8px;margin-left:auto;min-width:0;pointer-events:none}
 .tb-status{pointer-events:auto;display:inline-flex;align-items:center;gap:5px;flex:0 1 auto;min-width:0;max-width:100%;min-height:34px;padding:5px 9px;border-radius:999px;font-size:12.5px;font-weight:700;background:var(--green-soft);color:var(--green-deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:.25s}
 .tb-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
@@ -480,9 +480,10 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(29,185,84,.3)}50%{box-shadow:0 0 0 12px rgba(29,185,84,0)}}
 
 /* ============ 右上角新手教程入口（直接可点） ============ */
-.tb-guide{pointer-events:auto;flex:none;min-height:34px;padding:4px 10px;border-radius:999px;background:#fff;border:1px solid #BED9C8;color:var(--green-deep);display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;box-shadow:0 2px 8px rgba(18,61,40,.10);transition:.2s}
-.tb-guide:hover{background:var(--green-soft);transform:translateY(-1px);box-shadow:0 5px 14px rgba(18,61,40,.14)}
-.tb-guide:active{transform:scale(.96)}
+.help-fab{position:absolute;right:14px;bottom:86px;z-index:9;min-height:40px;padding:6px 12px;border-radius:999px;background:#fff;border:1px solid #BED9C8;color:var(--green-deep);display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;box-shadow:0 6px 18px rgba(18,61,40,.16);transition:.2s}
+.help-fab:hover{background:var(--green-soft);transform:translateY(-2px);box-shadow:0 10px 22px rgba(18,61,40,.20)}
+.help-fab:active{transform:scale(.96)}
+.phone-frame.has-dock .help-fab{bottom:172px}
 
 /* ============ 冰箱类型选择操作卡片 ============ */
 .model-action-card{display:flex;align-items:center;gap:11px;margin:5px 0 10px;padding:14px;border-radius:19px;background:linear-gradient(135deg,#D8EADF,#EBF6EE);border:1px solid #BED9C8;box-shadow:0 8px 22px rgba(18,61,40,.10),inset 0 1px 0 rgba(255,255,255,.9);transition:transform .25s ease,box-shadow .25s ease}
@@ -584,10 +585,11 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
   .app-outer-bar{display:none}
   .modal-overlay{padding:12px}
   .modal-card{max-width:100%;border-radius:18px;padding:18px}
-  .tb-guide{min-height:32px;padding:3px 8px;font-size:11px}
+  .help-fab{right:12px;bottom:calc(86px + env(safe-area-inset-bottom, 0px));min-height:38px;padding:5px 10px;font-size:11px}
+  .phone-frame.has-dock .help-fab{bottom:calc(178px + env(safe-area-inset-bottom, 0px))}
   .tb-actions{gap:6px}
   .tb-status{font-size:11.5px;padding:5px 7px}
-  .app-topbar.has-back .tb-title{max-width:70px}
+  .app-topbar.has-back .tb-title{max-width:100px}
   .dock-root{bottom:calc(78px + env(safe-area-inset-bottom, 0px));padding:0 12px}
   .scroll-rail{top:calc(66px + env(safe-area-inset-top, 0px));bottom:calc(88px + env(safe-area-inset-bottom, 0px))}
   .scroll-cue{bottom:calc(88px + env(safe-area-inset-bottom, 0px))}
