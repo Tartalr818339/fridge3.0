@@ -123,17 +123,20 @@
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
   const TOUR_STEPS = [
-    { title: '欢迎使用鲜知', desc: '帮你管好冰箱里的食材，减少浪费，每一口都吃得刚刚好。', target: '.app-hero' },
-    { title: '先看临期提醒', desc: '这里按紧急程度排序，越靠前越该先吃掉，打开冰箱前就能心里有数。', target: '.alert-banner' },
-    { title: '按位置找食材', desc: '冰箱分区模块按真实位置管理食材，冷藏、冷冻一目了然。', target: '.fridge-view.appliance' },
-    { title: '切换冰箱类型', desc: '点击这个按钮，可匹配你家冰箱，让分区更准确。', target: '.mac-primary' },
-    { title: '随时添加食材', desc: '底部这个醒目的 ＋ 添加 入口，之后可以拍照、手动或一句话新增食材。', target: '.tab-add' },
-    { title: '引导完成', desc: '现在开始管理你的冰箱吧，鲜知会一直帮你留意保质时间。', target: '.phone-frame' }
+    { title: '欢迎来到全新的鲜知', desc: '这是一个还没有数据的全新冰箱。跟着提示点一遍，完成一次完整探索。', page: 'home', target: '.phone-frame' },
+    { title: '添加第一份食材', desc: '点这个入口，之后可以拍照、手动或一句话录入食材。', page: 'home', target: '.tab-add' },
+    { title: '先看临期提醒', desc: '现在冰箱里有演示食材。这里按紧急程度排序，越靠前越该先吃掉。', page: 'home', target: '.alert-banner', seed: true, autoScroll: true },
+    { title: '按位置找食材', desc: '冰箱分区按真实位置管理，冷藏、冷冻一目了然。', page: 'home', target: '.fridge-view.appliance', autoScroll: true },
+    { title: '匹配你的冰箱', desc: '点这里切换冰箱类型，让分区和你家冰箱一致。', page: 'home', target: '.mac-primary' },
+    { title: '看看今天吃什么', desc: '食谱会优先推荐能用掉临期食材的菜，点这里开始挑菜。', page: 'recipes', target: '.ai-entry' },
+    { title: '把缺的加入补货', desc: '缺什么就在这里勾选补货，买完回来再更新冰箱。', page: 'restock', target: '.restock-item' },
+    { title: '探索完成', desc: '你已经走完一遍核心流程。现在开始管理你的冰箱吧。', page: 'home', target: '.phone-frame' }
   ];
   let tourActive = false;
   let tourStep = 0;
   let tourDoneCallback = null;
   let tourStepToken = 0;
+  let tourSnapshot = null;
 
   function renderTopbar(page) {
     const urgent = ITEMS.filter(i => i.remainingDays <= 2).length;
@@ -1421,13 +1424,51 @@
   }
 
   /* ==================== 新手引导教程 ==================== */
+  function beginTourDemo() {
+    if (tourSnapshot) return;
+    tourSnapshot = {
+      items: ITEMS.map(x => ({ ...x })),
+      restock: STATE.restock.map(x => ({ ...x })),
+      cart: STATE.cart.map(x => ({ ...x })),
+      checked: new Set(STATE.checked),
+      appPage: STATE.appPage
+    };
+    ITEMS.splice(0, ITEMS.length);
+    STATE.restock = [];
+    STATE.cart = [];
+    STATE.checked.clear();
+    STATE.appPage = 'home';
+  }
+
+  function restoreTourDemo() {
+    if (!tourSnapshot) return;
+    ITEMS.splice(0, ITEMS.length, ...tourSnapshot.items.map(x => ({ ...x })));
+    STATE.restock = tourSnapshot.restock.map(x => ({ ...x }));
+    STATE.cart = tourSnapshot.cart.map(x => ({ ...x }));
+    STATE.checked = new Set(tourSnapshot.checked);
+    STATE.appPage = tourSnapshot.appPage;
+    tourSnapshot = null;
+    renderApp();
+  }
+
+  function seedTourDemoItems() {
+    if (ITEMS.length) return;
+    ITEMS.push(
+      { id: 'tour-01', name: '原味酸奶', icon: '🥣', photo: '', layer: '冷藏室上层', purchaseDate: TODAY, expiryDate: '2025-06-07', remainingDays: 1, freshness: 'red', freshPct: 18, quantity: 2, unit: '杯', source: '演示食材' },
+      { id: 'tour-02', name: '番茄', icon: '🍅', photo: '', layer: '果蔬抽屉', purchaseDate: TODAY, expiryDate: '2025-06-08', remainingDays: 2, freshness: 'yellow', freshPct: 42, quantity: 4, unit: '个', source: '演示食材' },
+      { id: 'tour-03', name: '鲜鸡蛋', icon: '🥚', photo: '', layer: '冷藏室中层', purchaseDate: TODAY, expiryDate: '2025-06-10', remainingDays: 4, freshness: 'green', freshPct: 68, quantity: 6, unit: '枚', source: '演示食材' }
+    );
+    STATE.restock = RESTOCK_ITEMS.slice(0, 3).map(x => ({ ...x }));
+    renderApp();
+  }
+
   function startTour(onDone) {
     if (tourActive || !tourRoot) return;
     tourActive = true;
     tourStep = 0;
     tourDoneCallback = onDone || null;
     tourStepToken += 1;
-    STATE.appPage = 'home';
+    beginTourDemo();
     appEl.scrollTop = 0;
     renderApp();
     tourRoot.className = 'tour-root';
@@ -1435,15 +1476,18 @@
       <div class="tour-spotlight"></div>
       <div class="tour-card" role="dialog" aria-live="polite">
         <button class="tour-skip" type="button" data-tour-action="skip">跳过</button>
-        <div class="tour-kicker">新手引导 · <span class="tour-count-current">1</span>/${TOUR_STEPS.length}</div>
+        <div class="tour-kicker">实操引导 · <span class="tour-count-current">1</span>/${TOUR_STEPS.length}</div>
         <h3 class="tour-title"></h3>
         <p class="tour-desc"></p>
+        <div class="tour-hint">👆 点高亮区域即可实操继续</div>
         <div class="tour-dots"></div>
         <div class="tour-actions">
           <button class="tour-prev" type="button" data-tour-action="prev">上一步</button>
           <button class="tour-next" type="button" data-tour-action="next">下一步</button>
         </div>
       </div>`;
+    const spotlight = tourRoot.querySelector('.tour-spotlight');
+    spotlight.addEventListener('click', handleTourSpotlightClick);
     renderTourStep();
     requestAnimationFrame(updateTourPosition);
   }
@@ -1455,6 +1499,7 @@
     const spotlight = root.querySelector('.tour-spotlight');
     card.classList.remove('waiting');
     spotlight.style.opacity = '1';
+    spotlight.style.pointerEvents = 'auto';
     card.classList.remove('step-in');
     void card.offsetWidth;
     card.classList.add('step-in');
@@ -1479,18 +1524,23 @@
     if (!root || !tourActive) return;
     const token = ++tourStepToken;
     const step = TOUR_STEPS[tourStep];
+    if (step.page && STATE.appPage !== step.page) { STATE.appPage = step.page; renderApp(); }
+    if (step.seed) seedTourDemoItems();
     root.querySelector('.tour-count-current').textContent = String(tourStep + 1);
     root.querySelector('.tour-title').textContent = step.title;
     root.querySelector('.tour-desc').textContent = step.desc;
+    root.querySelector('.tour-hint').textContent = step.target === '.phone-frame'
+      ? '👆 点屏幕任意位置继续' : '👆 点高亮区域即可实操继续';
     root.querySelector('.tour-dots').innerHTML = TOUR_STEPS.map((_, i) => `<i class="${i === tourStep ? 'active' : ''}"></i>`).join('');
     const prev = root.querySelector('.tour-prev');
     prev.style.visibility = tourStep === 0 ? 'hidden' : 'visible';
-    root.querySelector('.tour-next').textContent = tourStep === TOUR_STEPS.length - 1 ? '开始使用' : '下一步';
+    root.querySelector('.tour-next').textContent = tourStep === TOUR_STEPS.length - 1 ? '开始探索' : '下一步';
     const card = root.querySelector('.tour-card');
     const spotlight = root.querySelector('.tour-spotlight');
-    if (tourStep === 2) {
+    if (step.autoScroll) {
       card.classList.add('waiting');
       spotlight.style.opacity = '0';
+      spotlight.style.pointerEvents = 'none';
       scrollTourTargetIntoView(step.target, () => {
         if (!tourActive || token !== tourStepToken) return;
         showTourStepCard();
@@ -1499,10 +1549,25 @@
     }
     card.classList.remove('waiting');
     spotlight.style.opacity = '1';
+    spotlight.style.pointerEvents = 'auto';
     card.classList.remove('step-in');
     void card.offsetWidth;
     card.classList.add('step-in');
     requestAnimationFrame(updateTourPosition);
+  }
+
+  function handleTourSpotlightClick() {
+    if (!tourActive) return;
+    const step = TOUR_STEPS[tourStep];
+    const target = (step.target && $(step.target)) || $('.phone-frame');
+    if (target) {
+      target.classList.remove('tour-pressed');
+      void target.offsetWidth;
+      target.classList.add('tour-pressed');
+      setTimeout(() => target.classList.remove('tour-pressed'), 240);
+    }
+    if (tourStep < TOUR_STEPS.length - 1) { tourStep += 1; renderTourStep(); }
+    else finishTour();
   }
 
   function updateTourPosition() {
@@ -1544,6 +1609,7 @@
     tourActive = false;
     tourDoneCallback = null;
     safeStore.set(TOUR_SEEN_KEY, '1');
+    restoreTourDemo();
     tourRoot.classList.add('closing');
     setTimeout(() => {
       tourRoot.className = 'tour-root';
