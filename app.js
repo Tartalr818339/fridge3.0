@@ -374,19 +374,10 @@
       ${fridgeZoneView()}`;
   }
 
-  function homeRecipeModule() {
-    return `<div class="sec-title">今日食谱 <button class="more" data-go="recipes">全部食谱 ›</button></div>
-      <div class="home-recipe-list">${RECIPES.slice(0, 2).map(r => `<button class="home-recipe" data-recipe="${r.id}">
-        <span class="hr-emoji" style="background:${r.thumb}">${r.emoji}</span>
-        <span class="grow"><b>${esc(r.name)}</b><small>⏱ ${r.minutes} 分钟 · ${r.ingredients.filter(x => x.have).length}/${r.ingredients.length} 食材已有</small></span>
-        <span class="hr-go">›</span>
-      </button>`).join('')}</div>`;
-  }
-
   function pageHome() {
     const soon = ITEMS.filter(i => i.remainingDays >= 0 && i.remainingDays <= 3).length;
     const module = STATE.homeModule || 'expiry';
-    const renderModule = { expiry: homeExpiryModule, zones: homeZoneModule, recipes: homeRecipeModule }[module] || homeExpiryModule;
+    const renderModule = { expiry: homeExpiryModule, zones: homeZoneModule }[module] || homeExpiryModule;
     return `<div class="app-hero">
         <h2>早上好，今天想吃些什么</h2>
         <p>按模块查看，今天的重点一眼看清</p>
@@ -399,7 +390,6 @@
       <div class="module-switch">
         <button class="module-tab ${module === 'expiry' ? 'active' : ''}" data-action="home-module" data-module="expiry">⏰ 临期</button>
         <button class="module-tab ${module === 'zones' ? 'active' : ''}" data-action="home-module" data-module="zones">🧊 分区</button>
-        <button class="module-tab ${module === 'recipes' ? 'active' : ''}" data-action="home-module" data-module="recipes">🍳 食谱</button>
       </div>
       <div class="home-module">${renderModule()}</div>`;
   }
