@@ -125,7 +125,7 @@
   const TOUR_STEPS = [
     { title: '欢迎来到全新的鲜知', desc: '这是一个还没有数据的全新冰箱。跟着提示点一遍，完成一次完整探索。', page: 'home', target: '.phone-frame' },
     { title: '添加第一份食材', desc: '点这个入口，之后可以拍照、手动或一句话录入食材。', page: 'home', target: '.tab-add' },
-    { title: '先看临期提醒', desc: '现在冰箱里有演示食材。这里按紧急程度排序，越靠前越该先吃掉。', page: 'home', target: '.alert-banner', seed: true, autoScroll: true },
+    { title: '先看临期提醒', desc: '这里按紧急程度排序；以后有快到期食材时，越靠前越该先吃掉。', page: 'home', target: '.alert-banner', autoScroll: true },
     { title: '按位置找食材', desc: '冰箱分区按真实位置管理，冷藏、冷冻一目了然。', page: 'home', target: '.fridge-view.appliance', autoScroll: true },
     { title: '匹配你的冰箱', desc: '点这里切换冰箱类型，让分区和你家冰箱一致。', page: 'home', target: '.mac-primary' },
     { title: '看看今天吃什么', desc: '食谱会优先推荐能用掉临期食材的菜，点这里开始挑菜。', page: 'recipes', target: '.ai-entry' },
@@ -241,7 +241,7 @@
         if (target) { target.scrollIntoView({ behavior: 'smooth', block: 'start' }); toast(`已定位到${layer}`); }
       }, 60);
     }
-    if (page === 'restock') maybeAutoRestock();
+    if (page === 'restock' && !tourActive) maybeAutoRestock();
   }
 
   function pageNfc() {
@@ -1451,23 +1451,15 @@
     renderApp();
   }
 
-  function seedTourDemoItems() {
-    if (ITEMS.length) return;
-    ITEMS.push(
-      { id: 'tour-01', name: '原味酸奶', icon: '🥣', photo: '', layer: '冷藏室上层', purchaseDate: TODAY, expiryDate: '2025-06-07', remainingDays: 1, freshness: 'red', freshPct: 18, quantity: 2, unit: '杯', source: '演示食材' },
-      { id: 'tour-02', name: '番茄', icon: '🍅', photo: '', layer: '果蔬抽屉', purchaseDate: TODAY, expiryDate: '2025-06-08', remainingDays: 2, freshness: 'yellow', freshPct: 42, quantity: 4, unit: '个', source: '演示食材' },
-      { id: 'tour-03', name: '鲜鸡蛋', icon: '🥚', photo: '', layer: '冷藏室中层', purchaseDate: TODAY, expiryDate: '2025-06-10', remainingDays: 4, freshness: 'green', freshPct: 68, quantity: 6, unit: '枚', source: '演示食材' }
-    );
-    STATE.restock = RESTOCK_ITEMS.slice(0, 3).map(x => ({ ...x }));
-    renderApp();
-  }
-
   function startTour(onDone) {
     if (tourActive || !tourRoot) return;
     tourActive = true;
     tourStep = 0;
     tourDoneCallback = onDone || null;
     tourStepToken += 1;
+    closeModal();
+    toastRoot.innerHTML = '';
+    document.body.classList.add('tour-active');
     beginTourDemo();
     appEl.scrollTop = 0;
     renderApp();
@@ -1525,7 +1517,6 @@
     const token = ++tourStepToken;
     const step = TOUR_STEPS[tourStep];
     if (step.page && STATE.appPage !== step.page) { STATE.appPage = step.page; renderApp(); }
-    if (step.seed) seedTourDemoItems();
     root.querySelector('.tour-count-current').textContent = String(tourStep + 1);
     root.querySelector('.tour-title').textContent = step.title;
     root.querySelector('.tour-desc').textContent = step.desc;
@@ -1591,16 +1582,17 @@
     spotlight.style.borderRadius = step.target === '.phone-frame' ? '44px'
       : step.target === '.tab-add' ? '20px' : '20px';
 
-    const cardW = Math.min(330, window.innerWidth - 32);
+    const cardW = Math.min(320, window.innerWidth - 32);
     card.style.width = `${cardW}px`;
-    const cardH = card.offsetHeight || 210;
-    let left = rect.left + rect.width / 2 - cardW / 2;
-    left = Math.max(16, Math.min(window.innerWidth - cardW - 16, left));
-    let top = rect.bottom + 14;
-    if (top + cardH > window.innerHeight - 16) top = rect.top - cardH - 14;
-    if (top < 16) top = Math.max(16, window.innerHeight - cardH - 16);
+    const left = Math.max(16, Math.min(window.innerWidth - cardW - 16, window.innerWidth / 2 - cardW / 2));
     card.style.left = `${left}px`;
-    card.style.top = `${top}px`;
+    card.style.top = 'auto';
+    card.style.bottom = 'auto';
+    if (step.target === '.tab-add' || rect.bottom > window.innerHeight - 180) {
+      card.style.top = '68px';
+    } else {
+      card.style.bottom = window.innerWidth <= 520 ? '86px' : '84px';
+    }
   }
 
   function finishTour() {
@@ -1610,6 +1602,7 @@
     tourDoneCallback = null;
     safeStore.set(TOUR_SEEN_KEY, '1');
     restoreTourDemo();
+    document.body.classList.remove('tour-active');
     tourRoot.classList.add('closing');
     setTimeout(() => {
       tourRoot.className = 'tour-root';
@@ -1672,8 +1665,8 @@
 
   function initExperienceSequence() {
     startIntro(() => {
-      // 每次刷新都完整重播：新手引导 → 临期食材提醒
-      startTour(() => showDailyExpiryPopup());
+      // 每次刷新重播新手引导；引导结束后不再自动弹临期提醒
+      startTour();
     });
   }
 
