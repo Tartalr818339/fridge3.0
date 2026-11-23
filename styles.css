@@ -525,7 +525,7 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .tour-root:not(:empty){display:block}
 .tour-root.closing{animation:fadeOut .24s ease both}
 @keyframes fadeOut{from{opacity:1}to{opacity:0}}
-.tour-spotlight{position:fixed;z-index:111;opacity:0;border:2px solid rgba(255,255,255,.96);border-radius:20px;box-shadow:0 0 0 9999px rgba(10,26,17,.58),0 8px 30px rgba(0,0,0,.18);pointer-events:none;transition:left .38s cubic-bezier(.2,.8,.2,1),top .38s cubic-bezier(.2,.8,.2,1),width .38s cubic-bezier(.2,.8,.2,1),height .38s cubic-bezier(.2,.8,.2,1),opacity .2s ease}
+.tour-spotlight{position:fixed;z-index:111;opacity:0;border:2px solid rgba(255,255,255,.96);border-radius:20px;box-shadow:0 0 0 9999px rgba(10,26,17,.58),0 8px 30px rgba(0,0,0,.18);pointer-events:auto;cursor:pointer;transition:left .38s cubic-bezier(.2,.8,.2,1),top .38s cubic-bezier(.2,.8,.2,1),width .38s cubic-bezier(.2,.8,.2,1),height .38s cubic-bezier(.2,.8,.2,1),opacity .2s ease}
 .tour-card{position:fixed;z-index:112;background:#fff;border-radius:18px;padding:18px 18px 16px;box-shadow:0 24px 60px rgba(0,0,0,.28);transition:left .38s cubic-bezier(.2,.8,.2,1),top .38s cubic-bezier(.2,.8,.2,1),width .38s cubic-bezier(.2,.8,.2,1),opacity .2s ease}
 .tour-card.waiting{opacity:0;pointer-events:none}
 .tour-card.step-in{animation:tourCardIn .28s ease both}
@@ -534,6 +534,9 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .tour-kicker{padding-right:44px;font-size:12px;font-weight:800;color:var(--green-deep);letter-spacing:.02em}
 .tour-title{font-size:18px;margin-top:8px}
 .tour-desc{font-size:13px;line-height:1.65;color:var(--ink-2);margin-top:8px}
+.tour-hint{display:inline-flex;align-items:center;gap:4px;margin-top:9px;padding:5px 9px;border-radius:999px;background:var(--green-soft);color:var(--green-deep);font-size:12px;font-weight:800}
+.tour-pressed{animation:tourPress .24s ease}
+@keyframes tourPress{0%,100%{transform:scale(1)}45%{transform:scale(.96);filter:brightness(.97)}}
 .tour-dots{display:flex;gap:5px;margin-top:14px}
 .tour-dots i{width:6px;height:6px;border-radius:999px;background:#D7E1DA;transition:.25s}
 .tour-dots i.active{width:18px;background:var(--green)}
@@ -593,10 +596,15 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
   .dock-root{bottom:calc(78px + env(safe-area-inset-bottom, 0px));padding:0 12px}
   .scroll-rail{top:calc(66px + env(safe-area-inset-top, 0px));bottom:calc(88px + env(safe-area-inset-bottom, 0px))}
   .scroll-cue{bottom:calc(88px + env(safe-area-inset-bottom, 0px))}
-  .model-action-card{flex-direction:column;align-items:stretch;gap:10px}
-  .mac-actions{flex-direction:row;align-items:center;justify-content:space-between}
-  .mac-primary{flex:1}
-  .mac-photo{text-decoration:none;padding:6px 8px}
+  .model-action-card{flex-direction:row;align-items:center;gap:8px;padding:12px}
+  .mac-ico{width:44px;height:44px;border-radius:13px}
+  .mac-ico svg{width:24px;height:24px}
+  .mac-title-row h4{font-size:15px}
+  .mac-sub{font-size:11px;padding:2px 6px}
+  .mac-info p{font-size:11px;line-height:1.4}
+  .mac-actions{flex-direction:column;align-items:stretch;gap:3px}
+  .mac-primary{min-height:34px;padding:7px 8px;font-size:12px}
+  .mac-photo{font-size:11px}
   .tour-card{padding:16px}
   .intro-skip{top:18px;right:18px}
   .brand-fridge{width:150px;height:190px}
