@@ -1,12 +1,12 @@
 /* ============ 鲜知 FreshSense · 手机 App 设计系统 ============ */
 :root{
-  --green:#189B5A; --green-soft:#E8F3EC; --green-deep:#0E7040;
-  --yellow:#D99A2B; --yellow-soft:#FFF4DE; --yellow-deep:#8A620F;
-  --red:#DC555A; --red-soft:#FCEDEE; --red-deep:#A32A2E;
-  --blue-soft:#EEF4FB;
-  --ink:#15251D; --ink-2:#4A5D51; --muted:#7C8D82;
-  --paper:#F3F7F4; --card:#FFFFFF; --line:#DEE7E0;
-  --shadow:0 12px 32px rgba(22,55,36,.07);
+  --green:#0FB45F; --green-soft:#D9F3E3; --green-deep:#087A3E;
+  --yellow:#F1B100; --yellow-soft:#FFF1C4; --yellow-deep:#8A6100;
+  --red:#F04452; --red-soft:#FDE4E7; --red-deep:#B0232E;
+  --blue-soft:#E6F0FF;
+  --ink:#10251A; --ink-2:#3C5847; --muted:#6C8074;
+  --paper:#EFF7F1; --card:#FFFFFF; --line:#D2E6DA;
+  --shadow:0 12px 32px rgba(8,122,62,.10);
   --radius:18px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -15,9 +15,9 @@ html{-webkit-text-size-adjust:100%}
 body{
   font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
   color:var(--ink); background:
-    radial-gradient(1100px 600px at 12% -5%,#E9F3EC 0%,transparent 55%),
-    radial-gradient(900px 500px at 100% 0%,#FFF6E4 0%,transparent 45%),
-    #F0F4F1;
+    radial-gradient(1100px 600px at 12% -5%,#D8F1E1 0%,transparent 55%),
+    radial-gradient(900px 500px at 100% 0%,#FFEFBF 0%,transparent 45%),
+    #EAF3ED;
   min-height:100vh;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:14px;padding:22px 0;
@@ -87,8 +87,8 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .tab-add:active{transform:translateY(-7px) scale(.96)}
 
 /* App 通用 */
-.app-hero{background:linear-gradient(135deg,#DCE9E0,#EBF3ED);color:var(--ink);border:1px solid #C9DDCF;border-radius:20px;padding:18px;margin-bottom:14px;position:relative;overflow:hidden}
-.app-hero::after{content:"";position:absolute;right:-30px;top:-30px;width:130px;height:130px;border-radius:50%;background:rgba(29,185,84,.07)}
+.app-hero{background:linear-gradient(135deg,#CDE9D6,#EAF7ED);color:var(--ink);border:1px solid #A9D6B9;border-radius:20px;padding:18px;margin-bottom:14px;position:relative;overflow:hidden}
+.app-hero::after{content:"";position:absolute;right:-30px;top:-30px;width:130px;height:130px;border-radius:50%;background:rgba(15,180,95,.12)}
 .app-hero h2{font-size:18px;position:relative}
 .app-hero p{font-size:14px;color:#5C7163;margin-top:4px;position:relative}
 /* 首页模块化概览 */
@@ -102,7 +102,7 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .module-switch{display:flex;gap:5px;padding:4px;margin-bottom:12px;border-radius:14px;background:var(--paper);border:1px solid var(--line)}
 .module-tab{flex:1;min-height:38px;border-radius:10px;font-size:13px;font-weight:700;color:var(--ink-2);transition:.2s}
 .module-tab:hover{color:var(--green-deep)}
-.module-tab.active{background:#fff;color:var(--green-deep);box-shadow:0 3px 10px rgba(22,55,36,.08)}
+.module-tab.active{background:var(--green);color:#fff;box-shadow:0 4px 12px rgba(15,180,95,.28)}
 .home-module{animation:moduleIn .25s ease}
 @keyframes moduleIn{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}
 .home-recipe-list{display:flex;flex-direction:column;gap:8px}
@@ -124,7 +124,7 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .pill-tag.yellow{background:var(--yellow-soft);color:var(--yellow-deep)}
 .pill-tag.red{background:var(--red-soft);color:var(--red-deep)}
 .pill-tag.gray{background:#EEF2EF;color:var(--ink-2)}
-.priority-tag{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:800;color:var(--yellow-deep);background:#FFF0CD;border:1px solid #E6CE94;border-radius:999px;padding:2px 7px;white-space:nowrap}
+.priority-tag{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:800;color:var(--yellow-deep);background:#FFE3A8;border:1px solid #E7C566;border-radius:999px;padding:2px 7px;white-space:nowrap}
 .priority-tag.expired{color:var(--red-deep);background:var(--red-soft);border-color:#F1C3C6}
 .expiry-mini-row .priority-tag{font-size:11px;padding:1px 6px}
 .de-meta .priority-tag{font-size:11px;padding:1px 6px}
@@ -175,7 +175,7 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .fridge-view.appliance{border:1px solid #D9E4DC;border-radius:22px;background:linear-gradient(180deg,#fff,#F7FAF8);overflow:hidden;box-shadow:inset 0 1px 0 #fff,0 8px 22px rgba(20,50,30,.06);position:relative}
 .fridge-view.appliance::before{content:"";display:block;height:5px;background:linear-gradient(90deg,#1B6B3C,#1DB954,#1B6B3C)}
 .fv-group+.fv-group{border-top:2px solid #E7EEE9}
-.fv-group.cold{background:linear-gradient(180deg,#F7FAFE,var(--blue-soft))}
+.fv-group.cold{background:linear-gradient(180deg,#EFF5FF,var(--blue-soft))}
 .fv-group-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px 6px;font-size:14px;font-weight:800;color:var(--ink)}
 .fv-group-head span:first-child{display:inline-flex;align-items:center;gap:6px}
 .fv-group-head span:first-child::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green)}
@@ -228,7 +228,7 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .fd-days.yellow{color:var(--yellow-deep)}
 .fd-days.red{color:var(--red-deep)}
 
-.alert-banner{display:flex;gap:10px;align-items:flex-start;background:linear-gradient(135deg,#FFF8E8,#FFFDF7);border:1px solid #EADDBE;border-radius:14px;padding:12px;margin-bottom:12px}
+.alert-banner{display:flex;gap:10px;align-items:flex-start;background:linear-gradient(135deg,#FFF0C8,#FFFCF0);border:1px solid #E8CF86;border-radius:14px;padding:12px;margin-bottom:12px}
 .alert-banner .ab-ico{font-size:20px}
 .alert-banner h4{font-size:14px;color:#6B5310}
 .alert-banner p{font-size:14px;color:#6B7C72;margin-top:3px;line-height:1.5}
@@ -430,10 +430,10 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .layer-mini .lm-open{flex:none;margin-top:auto;padding-top:4px}
 
 /* ============ 到期天数筛选：单行分段控制器 ============ */
-.expiry-tabs{display:flex;gap:4px;margin-top:9px;padding:4px;border-radius:12px;background:rgba(255,246,226,.9);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 10px,#000 calc(100% - 16px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 10px,#000 calc(100% - 16px),transparent 100%)}
+.expiry-tabs{display:flex;gap:4px;margin-top:9px;padding:4px;border-radius:12px;background:rgba(255,240,196,.95);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 10px,#000 calc(100% - 16px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 10px,#000 calc(100% - 16px),transparent 100%)}
 .expiry-tabs::-webkit-scrollbar{display:none}
-.expiry-tab{flex:none;min-width:68px;min-height:44px;padding:6px 10px;border-radius:9px;background:#FFF5E2;border:1px solid #E7D6B0;color:#7A5B12;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px;transition:.18s}
-.expiry-tab.active{background:#A9741A;border-color:#8A620F;color:#fff;box-shadow:0 2px 8px rgba(138,98,15,.22)}
+.expiry-tab{flex:none;min-width:68px;min-height:44px;padding:6px 10px;border-radius:9px;background:#FFE7A6;border:1px solid #E3C86F;color:#6B4B00;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px;transition:.18s}
+.expiry-tab.active{background:#B37C00;border-color:#8A6100;color:#fff;box-shadow:0 2px 8px rgba(138,97,0,.28)}
 .expiry-tab i{font-style:normal;min-width:22px;height:20px;line-height:20px;padding:0 3px;text-align:center;font-size:12px;font-weight:800;border-radius:999px;background:rgba(154,112,0,.14);color:#6B5310}
 .expiry-tab.active i{background:rgba(255,255,255,.26);color:#fff}
 .expiry-list-mini{margin-top:9px;display:flex;flex-direction:column;gap:5px}
