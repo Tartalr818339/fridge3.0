@@ -21,6 +21,7 @@
   };
 
   const appEl = $('#app-content');
+  const phoneFrame = $('.phone-frame');
   const topbarEl = $('#app-topbar');
   const tabEl = $('#app-tabbar');
   const modalRoot = $('#modal-root');
@@ -137,14 +138,12 @@
   function renderTopbar(page) {
     const urgent = ITEMS.filter(i => i.remainingDays <= 2).length;
     const statusText = urgent ? `${ITEMS.length} 件 · ${urgent} 临期` : `${ITEMS.length} 件`;
-    topbarEl.className = 'app-topbar' + (appEl.scrollTop > 8 ? ' scrolled' : '') + (page === 'home' ? '' : ' has-back');
-    const backTarget = page === 'recipe' ? 'recipes' : (page === 'product' || page === 'cart') ? 'restock' : 'home';
-    const backLabel = (page === 'recipe' || page === 'product' || page === 'cart') ? '返回' : '首页';
-    const back = page === 'home' ? '' : `<button class="tb-back${page === 'recipe' ? ' subtle' : ''}" data-go="${backTarget}">‹ ${backLabel}</button>`;
+    const backTarget = { recipe: 'recipes', product: 'restock', cart: 'restock', nfc: 'device' }[page];
+    topbarEl.className = 'app-topbar' + (appEl.scrollTop > 8 ? ' scrolled' : '') + (backTarget ? ' has-back' : '');
+    const back = backTarget ? `<button class="tb-back${page === 'recipe' ? ' subtle' : ''}" data-go="${backTarget}">‹ 返回</button>` : '';
     topbarEl.innerHTML = `${back}<div class="tb-title">${PAGE_TITLES[page] || '鲜知'}</div>
       <div class="tb-actions">
         <button class="tb-status" data-go="fridge"><span class="tb-dot${urgent ? ' warn' : ''}"></span>${statusText}</button>
-        <button class="tb-guide" data-action="tour-restart" aria-label="重新查看新手教程">🧭<span>教程</span></button>
       </div>`;
   }
 
@@ -217,6 +216,7 @@
       renderTopbar(page);
       renderDock(page);
       appEl.classList.toggle('has-dock', page === 'restock' || page === 'cart');
+      if (phoneFrame) phoneFrame.classList.toggle('has-dock', page === 'restock' || page === 'cart');
       const active = (page === 'recipe') ? 'recipes'
         : (page === 'product' || page === 'cart') ? 'restock'
         : (page === 'fridge' || page === 'nfc') ? 'home' : page;
