@@ -168,6 +168,7 @@ function purchaseToItem(sku) {
 /* ---------- 手机 App 状态 ---------- */
 const STATE = {
   appPage: 'home',         // nfc | home | fridge | recipes | recipe | restock | product | cart | device
+  homeModule: 'expiry',    // 首页模块：expiry | zones | recipes
   recipeId: 'rc-01',
   productSku: null,
   restock: RESTOCK_ITEMS.map(x => ({ ...x })),
