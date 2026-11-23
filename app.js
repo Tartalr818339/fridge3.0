@@ -375,7 +375,10 @@
   }
 
   function pageHome() {
-    const soon = ITEMS.filter(i => i.remainingDays >= 0 && i.remainingDays <= 3).length;
+    const soonItems = ITEMS.filter(i => i.remainingDays >= 0 && i.remainingDays <= 3);
+    const soon = soonItems.length;
+    const minDays = soon ? Math.min(...soonItems.map(i => i.remainingDays)) : 99;
+    const dueTone = !soon ? 'empty' : minDays <= 1 ? 'red' : minDays === 2 ? 'amber' : 'green';
     const module = STATE.homeModule || 'expiry';
     const renderModule = { expiry: homeExpiryModule, zones: homeZoneModule }[module] || homeExpiryModule;
     return `<div class="app-hero">
@@ -384,7 +387,7 @@
       </div>
       <div class="home-stats">
         <button class="home-stat" data-go="fridge"><b>${ITEMS.length}</b><span>食材总数</span></button>
-        <button class="home-stat warn" data-action="home-module" data-module="expiry"><b>${soon}</b><span>临期食材</span></button>
+        <button class="home-stat due-${dueTone}" data-action="home-module" data-module="expiry"><b>${soon}</b><span>临期食材</span></button>
         <button class="home-stat recipe" data-go="recipes"><b>${RECIPES.length}</b><span>今日食谱</span></button>
       </div>
       <div class="module-switch">
