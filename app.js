@@ -808,6 +808,7 @@
   const API_BASE = 'https://www.themealdb.com/api/json/v1/1/search.php';
   const API_TERM_RULES = [
     [/番茄.{0,3}蛋|西红柿.{0,3}蛋|番茄炒蛋/, 'tomato egg'],
+    [/番茄|西红柿/, 'tomato'],
     [/奶油蘑菇汤|蘑菇汤/, 'mushroom soup'],
     [/可乐鸡翅|鸡翅/, 'chicken wings'],
     [/鸡胸/, 'chicken breast'], [/三文鱼|鲑鱼/, 'salmon'],
@@ -879,8 +880,7 @@
         const data = await res.json();
         return Array.isArray(data.meals) ? data.meals : [];
       };
-      let meals = await search(term);
-      if (!meals.length && term.includes(' ')) meals = await search(term.split(' ')[0]);
+      const meals = await search(term);
       if (!meals.length) return null;
       return mealToRecipe(meals.find(x => x.strYoutube && x.strMealThumb) || meals[0], query);
     } catch (e) {
@@ -899,6 +899,13 @@
     </div>`;
   }
 
+  const GENERIC_HINT_WORDS = new Set(['鸡', '鱼', '肉', '虾', '蛋', '奶', '蔬菜', '青菜', '时蔬', '海鲜']);
+  function queryIngredientHints(q) {
+    return INGREDIENT_HINTS
+      .filter(e => e[1].some(w => q.includes(w) && !GENERIC_HINT_WORDS.has(w)))
+      .map(e => e[0]);
+  }
+
   function aiResolveRecipe(query) {
     // 去掉口语前缀，避免「我想吃鱼」被「我想/吃」干扰而匹配错菜
     const q = String(query || '').trim().replace(/^(我想吃|我想要|我想|想吃|来一份|来个|我要|吃|做)/, '').trim();
@@ -911,12 +918,16 @@
     // 1) 菜名整体相等或互相包含（只在 2 字以上时判断包含，避免单字误命中）
     hit = all.find(d => d.name === q);
     if (!hit && q.length >= 2) hit = all.find(d => d.name.includes(q) || q.includes(d.name));
-    // 2) 标签整体匹配：一个标签词要么完整出现在输入里，要么输入完整出现在标签里
+    // 2) 标签匹配：用户点名的具体食材必须都被这道菜覆盖，绝不拿别的菜顶替
     if (!hit) {
+      const hints = queryIngredientHints(q);
       let best = 0;
       all.forEach(d => {
+        const names = (d.ingredients || []).map(x => typeof x === 'string' ? x : x.name);
+        const tags = d.tags || [];
+        if (hints.length && !hints.every(h => tags.some(t => t === h || t.includes(h) || h.includes(t)) || names.some(n => n === h || n.includes(h) || h.includes(n)))) return;
         let score = 0;
-        (d.tags || []).forEach(t => {
+        tags.forEach(t => {
           if (t.length >= 2 && q.includes(t)) score += t.length * 2;
           else if (t.includes(q)) score += q.length;
         });
@@ -970,8 +981,8 @@
       : '<span class="ai-none">暂时不用补货 🎉</span>';
     const expiringTip = expiringInRecipe.length
       ? `<div class="ai-tip">⏰ 正好能用掉快到期的：<b>${expiringInRecipe.map(esc).join('、')}</b>，今天做正合适</div>` : '';
-    const customTip = mode === 'custom' && !have.length && !need.length
-      ? '<div class="ai-tip">这道菜不在常用菜库里，先按家常步骤整理好了；要买什么可以随手加到补货清单。</div>' : '';
+    const customTip = mode === 'custom'
+      ? '<div class="ai-tip">联网没找到这道菜的现成做法，先按你说的菜名整理了步骤和用料；要买什么可以随手加到补货清单。</div>' : '';
     const modeText = mode === 'api' ? '联网找到做法，已对照你的冰箱'
       : mode === 'custom' ? '按你想的菜整理好了，再看看冰箱里有什么'
       : mode === 'keyword' ? '按你说的口味找到这道菜' : '按菜名对照了冰箱里的食材';
