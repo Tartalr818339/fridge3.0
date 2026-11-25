@@ -281,8 +281,9 @@
         ${g.layers.map(layer => {
           const its = ITEMS.filter(i => i.layer === layer);
           const urgent = its.filter(i => i.remainingDays <= 2).length;
+          const toneOrder = { green: 0, yellow: 1, red: 2 };
           const bar = its.length
-            ? its.map(i => `<i class="${i.freshness}"></i>`).join('')
+            ? its.slice().sort((a, b) => (toneOrder[a.freshness] ?? 3) - (toneOrder[b.freshness] ?? 3)).map(i => `<i class="${i.freshness}"></i>`).join('')
             : '<i class="empty"></i>';
           return `<button class="fv-row" data-action="app-open-layer" data-layer="${esc(layer)}">
             <span class="fv-ico">${layerIcon(layer)}</span>
@@ -1022,12 +1023,11 @@
     const { recipe, mode } = result;
     STATE.aiDish = recipe;
     const { have, need, expiringInRecipe } = aiAnalyzeRecipe(recipe);
-    need.forEach(n => { const sku = skuByName(n); if (sku) addToCart(sku, null); });
     const chipHtml = have.length
       ? have.map(i => `<span class="ai-have-chip ${i.freshness}">${foodIcon(i.name, i.icon)} ${esc(i.name)} · 剩${i.remainingDays}天</span>`).join('')
       : '<span class="ai-none">冰箱里没找到这道菜的明确用料</span>';
     const needHtml = need.length
-      ? need.map(n => `<span class="ai-need-chip">＋ ${esc(n)}</span>`).join('')
+      ? need.map(n => `<button class="ai-need-chip" data-action="ai-need-add" data-name="${esc(n)}">＋ ${esc(n)}</button>`).join('')
       : '<span class="ai-none">暂时不用补货 🎉</span>';
     const expiringTip = expiringInRecipe.length
       ? `<div class="ai-tip">⏰ 正好能用掉快到期的：<b>${expiringInRecipe.map(esc).join('、')}</b>，今天做正合适</div>` : '';
@@ -1046,10 +1046,9 @@
         <div class="ai-dish"><span class="ai-dish-emoji">${dishIcon(recipe.emoji)}</span><div><h4>${esc(recipe.name)}</h4><p>⏱ ${recipe.minutes} 分钟 · ${recipe.steps.length} 步完成</p></div></div>
         ${expiringTip}${customTip}
         <div class="ai-sec"><h5>✅ 冰箱里能用上（${have.length}）</h5><div class="ai-chips-static">${chipHtml}</div></div>
-        <div class="ai-sec"><h5>🛒 建议补货（${need.length}）</h5><div class="ai-chips-static">${needHtml}</div></div>
-        <div class="ai-summary">已有 ${have.length} 样 · 需补 ${need.length} 样${expiringInRecipe.length ? ' · 用掉快到期食材 ' + expiringInRecipe.length + ' 样' : ''}</div>
+        <div class="ai-sec"><h5>🛒 建议补货（${need.length}）· 点食材可直接加入购物车</h5><div class="ai-chips-static">${needHtml}</div></div>
         <div class="ai-actions">
-          ${need.length ? `<button class="btn btn-primary grow" data-action="go-cart">已加入购物车 · 去结算</button>` : ''}
+          ${need.length ? `<button class="btn btn-primary grow" data-action="go-cart">一键加入购物车 · 去结算</button>` : ''}
           <button class="btn btn-ghost grow" data-action="ai-view-steps">看详细做法</button>
           ${recipe.video ? `<a class="btn btn-ghost grow" href="${esc(recipe.video.url)}" target="_blank" rel="noopener noreferrer">▶ 看教学视频 · ${esc(recipe.video.author)}</a>` : ''}
         </div>
@@ -1406,7 +1405,7 @@
   function addPanelHtml() {
     if (addMode === 'photo') {
       return `<div class="add-camera">
-          <label for="af-photos"><span class="ac-orb">${dishIcon('📷')}</span><p>上传食材照片，调用视觉 API 识别后入库</p></label>
+          <label for="af-photos"><span class="ac-orb">${dishIcon('📷')}</span><p>上传食材照片，本地 AI 自动识别后入库</p></label>
           <input type="file" id="af-photos" accept="image/*" capture="environment" multiple />
         </div>
         <div class="add-preview" id="ap-preview"></div>`;
@@ -1444,46 +1443,76 @@
     if (addMode === 'photo') return '识别并入库';
     return (addMode === 'text' || (addMode === 'manual' && addBatch)) ? '识别食材' : '确认添加';
   }
-  function parseVisionNames(data) {
-    const out = [];
-    const push = (v) => {
-      if (!v) return;
-      if (typeof v === 'string') out.push(v.trim());
-      else if (typeof v === 'object') {
-        const n = v.name || v.label || v.ingredient || v.food || v.className || v.class || v.title;
-        if (n) out.push(String(n).trim());
-      }
-    };
-    if (Array.isArray(data)) data.forEach(push);
-    else if (data && typeof data === 'object') {
-      const list = data.items || data.results || data.predictions || data.ingredients || data.foods || data.classes || data.labels || data.data;
-      if (Array.isArray(list)) list.forEach(push); else push(data);
+  // ImageNet 标签 → 中文食材（MobileNet 在浏览器本地推理，识别结果按此表映射）
+  const IMAGENET_FOOD = {
+    'granny smith': '红苹果', 'apple': '红苹果', 'orange': '橙子', 'lemon': '柠檬',
+    'banana': '香蕉', 'jackfruit': '菠萝蜜', 'custard apple': '释迦果', 'pomegranate': '石榴',
+    'papaya': '木瓜', 'grape': '葡萄', 'strawberry': '草莓', 'blueberry': '蓝莓',
+    'watermelon': '西瓜', 'kiwi fruit': '猕猴桃', 'kiwi': '猕猴桃', 'fig': '无花果',
+    'pineapple': '菠萝', 'artichoke': '洋蓟', 'bell pepper': '彩椒', 'cardoon': '洋蓟',
+    'mushroom': '蘑菇', 'zucchini': '西葫芦', 'cucumber': '黄瓜', 'broccoli': '西兰花',
+    'cauliflower': '花椰菜', 'cabbage': '卷心菜', 'carrot': '胡萝卜', 'bagel': '贝果',
+    'pretzel': '椒盐卷饼', 'french loaf': '法棍', 'baguette': '法棍', 'loaf': '面包',
+    'bread': '吐司面包', 'bun': '面包', 'corn': '玉米', 'acorn squash': '南瓜',
+    'butternut squash': '南瓜', 'spaghetti squash': '南瓜', 'green bean': '四季豆',
+    'pea': '豌豆', 'asparagus': '芦笋', 'beet': '甜菜', 'radish': '樱桃萝卜',
+    'eggplant': '茄子', 'okra': '秋葵', 'pear': '梨', 'peach': '桃子', 'plum': '李子',
+    'cherry': '樱桃', 'mango': '芒果', 'coconut': '椰子', 'walnut': '核桃',
+    'almond': '杏仁', 'peanut': '花生', 'cashew': '腰果', 'hazelnut': '榛子',
+    'chestnut': '板栗', 'pistachio': '开心果', 'yam': '山药', 'sweet potato': '红薯',
+    'turnip': '芜菁', 'parsnip': '欧防风', 'celery': '芹菜', 'fennel': '茴香',
+    'leek': '韭葱', 'garlic': '大蒜', 'ginger': '姜', 'parsley': '欧芹',
+    'basil': '罗勒', 'thyme': '百里香', 'oregano': '牛至', 'rosemary': '迷迭香'
+  };
+
+  let visionModelPromise = null;
+  function loadVisionModel() {
+    if (!window.tf || !window.mobilenet) return Promise.reject(new Error('识别引擎未加载'));
+    if (!visionModelPromise) {
+      visionModelPromise = window.mobilenet
+        .load({ version: 1, alpha: 1.0, modelUrl: './assets/model/model.json' })
+        .catch(e => { visionModelPromise = null; throw e; });
     }
-    return Array.from(new Set(out.map(cnIngredient).filter(Boolean))).slice(0, 8);
+    return visionModelPromise;
   }
 
   async function recognizePhotos(files) {
-    const cfg = window.FRESH_VISION || {};
-    if (!cfg.endpoint) { toast('尚未配置图像识别 API，请在页面配置 endpoint'); return; }
     const pv = $('#ap-preview'); if (!pv) return;
     pv.style.display = 'block';
-    pv.innerHTML = '<div style="font-size:15px;color:var(--muted)">🔍 正在调用视觉 API 识别…</div>';
+    pv.innerHTML = '<div style="font-size:15px;color:var(--muted)">🔍 正在加载识别模型…首次可能需几秒</div>';
     delete pv.dataset.photoNames;
-    const fd = new FormData();
-    Array.from(files || []).forEach((f, i) => fd.append('image', f, f.name || ('photo' + i + '.jpg')));
-    const headers = {};
-    if (cfg.key) headers.Authorization = `Bearer ${cfg.key}`;
+    const fileList = Array.from(files || []).filter(f => f && /^image\//.test(f.type));
+    if (!fileList.length) { pv.innerHTML = ''; toast('请选择图片'); return; }
     try {
-      const res = await fetch(cfg.endpoint, { method: 'POST', headers, body: fd });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const names = parseVisionNames(await res.json());
-      if (!names.length) { toast('没有识别到食材，请换张照片试试'); pv.innerHTML = ''; return; }
-      pv.innerHTML = '<div style="font-size:15px;color:var(--muted);margin-bottom:6px">🔍 识别到食材：</div>' + names.map(n => `<div class="ap-row"><span>🥗</span><span>${esc(n)}</span></div>`).join('');
-      pv.dataset.photoNames = JSON.stringify(names);
+      const model = await loadVisionModel();
+      pv.innerHTML = '<div style="font-size:15px;color:var(--muted)">🔍 正在识别照片…</div>';
+      const names = [];
+      for (const f of fileList) {
+        const url = URL.createObjectURL(f);
+        try {
+          const img = await new Promise((res, rej) => {
+            const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error('图片读取失败')); im.src = url;
+          });
+          const preds = await model.classify(img, 5);
+          preds.forEach(p => {
+            const label = String(p.className || '').toLowerCase().trim();
+            let cn = IMAGENET_FOOD[label];
+            if (!cn) {
+              const fallback = cnIngredient(label);
+              if (fallback && !['食材', '水果', '蔬菜'].includes(fallback)) cn = fallback;
+            }
+            if (cn && !names.includes(cn)) names.push(cn);
+          });
+        } finally { URL.revokeObjectURL(url); }
+      }
+      if (!names.length) { toast('没识别出食材，请换张更清晰的照片或用手动录入'); pv.innerHTML = ''; return; }
+      pv.innerHTML = '<div style="font-size:15px;color:var(--muted);margin-bottom:6px">🔍 识别到食材（点可移除）：</div>' +
+        names.slice(0, 8).map(n => `<button type="button" class="ap-row" data-action="photo-remove-name" data-name="${esc(n)}"><span>🥗</span><span>${esc(n)}</span><span style="color:var(--muted)">✕</span></button>`).join('');
+      pv.dataset.photoNames = JSON.stringify(names.slice(0, 8));
       toast('识别完成，点「识别并入库」确认');
     } catch (e) {
       pv.innerHTML = '';
-      toast('图像识别失败：' + (e.message || '网络错误'));
+      toast('识别失败：' + (e.message || '请重试'));
     }
   }
 
@@ -2009,6 +2038,30 @@
         if (!q.trim()) { toast('先说说想吃什么菜'); if (input) input.focus(); return; }
         renderAiResult(q); return;
       }
+      if (a === 'photo-remove-name') {
+        const pv = $('#ap-preview');
+        if (!pv || !pv.dataset.photoNames) return;
+        let names = [];
+        try { names = JSON.parse(pv.dataset.photoNames); } catch (e) { names = []; }
+        names = names.filter(n => n !== actionEl.dataset.name);
+        pv.dataset.photoNames = JSON.stringify(names);
+        actionEl.remove();
+        return;
+      }
+      if (a === 'ai-need-add') {
+        const name = actionEl.dataset.name;
+        if (!name) return;
+        const sku = skuByName(name);
+        if (sku) addToCart(sku, null);
+        else if (!STATE.restock.some(rs => rs.name === name)) {
+          STATE.restock.push({ id: 'rs-' + Date.now(), name, suggestQty: 1, unit: '份', source: '食谱缺料', status: '待补' });
+        }
+        actionEl.classList.add('added');
+        actionEl.dataset.added = '1';
+        actionEl.innerHTML = '✓ ' + esc(name);
+        toast('已加入购物车');
+        return;
+      }
       if (a === 'ai-add-restock') {
         const r = STATE.aiDish || RECIPES.find(x => x.id === actionEl.dataset.recipe);
         const { need } = aiAnalyzeRecipe(r);
@@ -2099,7 +2152,15 @@
         if (!sku) { toast('这款暂时没有同款商品'); return; }
         addToCart(sku, r.id); renderApp(); toast('已加入购物车'); return;
       }
-      if (a === 'go-cart') { closeModal(); STATE.appPage = 'cart'; renderApp(); return; }
+      if (a === 'go-cart') {
+        const addedNames = new Set($$('.ai-need-chip[data-added="1"]').map(el => el.dataset.name));
+        const r = STATE.aiDish;
+        if (r) {
+          const { need } = aiAnalyzeRecipe(r);
+          need.filter(n => !addedNames.has(n)).forEach(n => { const sku = skuByName(n); if (sku) addToCart(sku, null); });
+        }
+        closeModal(); STATE.appPage = 'cart'; renderApp(); toast('所需食材已加入购物车'); return;
+      }
       if (a === 'cart-manage') { cartManageMode = !cartManageMode; renderApp(); return; }
       if (a === 'cart-remove') {
         STATE.cart.splice(+actionEl.dataset.idx, 1);
