@@ -415,7 +415,7 @@
         <h2>我的冰箱</h2>
         <p>${ITEMS.length} 件食材 · ${currentLayers().length} 个分区${urgent ? ` · ${urgent} 件优先吃掉` : ''}</p>
       </div>
-      <button class="add-entry" data-action="add-open">＋ 添加食材 <span style="opacity:.75">拍照 / 手动 / 一句话</span></button>
+      <button class="add-entry" data-action="add-open">＋ 添加食材</button>
       <div class="status-bar">
         <div class="status-chip"><b>${freshCount}</b><span>新鲜</span></div>
         <div class="status-chip soon"><b>${soonCount}</b><span>2 天内吃</span></div>
@@ -1356,10 +1356,15 @@
     if (!SR) { toast('当前浏览器不支持语音识别，请用 Chrome 或 Edge 打开'); return; }
     stopVoice();
     const rec = new SR();
-    rec.lang = 'zh-CN'; rec.interimResults = false; rec.maxAlternatives = 1;
-    rec.onstart = () => { $$('.mic-btn').forEach(b => b.classList.add('listening')); toast('正在听，请说出食材'); };
+    rec.lang = 'zh-CN'; rec.interimResults = true; rec.maxAlternatives = 1;
+    rec.onstart = () => { $$('.mic-btn').forEach(b => b.classList.add('listening')); toast('正在听，请说出食材，如「买了6个鸡蛋」'); };
     rec.onresult = (e) => {
-      const text = (e.results[0][0].transcript || '').trim();
+      let text = '', interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const part = (e.results[i][0].transcript || '').trim();
+        if (e.results[i].isFinal) text += part; else interim += part;
+      }
+      const live = $('#af-name'); if (interim && live) live.value = interim;
       if (!text) return;
       if (type === 'text') {
         const inp = $('#ai-food-input'); if (inp) inp.value = text;
@@ -1402,10 +1407,7 @@
     if (addMode === 'manual') {
       const layers = currentLayers();
       const defaultLayer = layers[0];
-      return `<div class="add-quick">
-          <button class="aq-btn" data-action="add-tab" data-mode="photo">${dishIcon('📷')} 拍照识别</button>
-          <button class="aq-btn" data-action="add-tab" data-mode="text">${dishIcon('💬')} 一句话录入</button>
-        </div>
+      return `
         <div class="add-field"><label>食材名称</label>
           <div class="input-with-mic"><input id="af-name" placeholder="如：鸡蛋、牛奶、西兰花" /><button class="mic-btn" data-action="voice-manual" aria-label="语音输入">${dishIcon('🎤')}</button></div>
         </div>
@@ -1466,15 +1468,11 @@
     modalRoot.innerHTML = `<div class="modal-overlay" data-action="close-modal">
       <div class="modal-card" data-stop="1">
         <div class="modal-head">
-          <div class="modal-icon">${dishIcon('🧺')}</div>
+          <div class="modal-icon">${dishIcon('🥗')}</div>
           <div class="grow"><h3>添加食材</h3><p id="add-subtitle">${addSubtitle()}</p></div>
           <button class="al-close" data-action="close-app-layer" aria-label="关闭">${ICON.x}</button>
         </div>
-        <div class="add-tabs">
-          <button class="add-tab ${addMode==='manual'?'active':''}" data-action="add-tab" data-mode="manual">${dishIcon('✍️')} 手动<i>推荐</i></button>
-          <button class="add-tab ${addMode==='photo'?'active':''}" data-action="add-tab" data-mode="photo">${dishIcon('📷')} 拍照</button>
-          <button class="add-tab ${addMode==='text'?'active':''}" data-action="add-tab" data-mode="text">${dishIcon('💬')} 一句话</button>
-        </div>
+
         ${addMode === 'manual' ? `<div class="batch-toggle">
           <button class="batch-seg ${!addBatch?'active':''}" data-action="add-batch" data-batch="single">单件</button>
           <button class="batch-seg ${addBatch?'active':''}" data-action="add-batch" data-batch="batch">批量</button>
