@@ -1406,7 +1406,7 @@
   function addPanelHtml() {
     if (addMode === 'photo') {
       return `<div class="add-camera">
-          <label for="af-photos"><span class="ac-orb">${dishIcon('📷')}</span><p>上传 1 张或多张食材照片，都能识别入库</p></label>
+          <label for="af-photos"><span class="ac-orb">${dishIcon('📷')}</span><p>上传食材照片，调用视觉 API 识别后入库</p></label>
           <input type="file" id="af-photos" accept="image/*" capture="environment" multiple />
         </div>
         <div class="add-preview" id="ap-preview"></div>`;
@@ -1444,15 +1444,53 @@
     if (addMode === 'photo') return '识别并入库';
     return (addMode === 'text' || (addMode === 'manual' && addBatch)) ? '识别食材' : '确认添加';
   }
+  function parseVisionNames(data) {
+    const out = [];
+    const push = (v) => {
+      if (!v) return;
+      if (typeof v === 'string') out.push(v.trim());
+      else if (typeof v === 'object') {
+        const n = v.name || v.label || v.ingredient || v.food || v.className || v.class || v.title;
+        if (n) out.push(String(n).trim());
+      }
+    };
+    if (Array.isArray(data)) data.forEach(push);
+    else if (data && typeof data === 'object') {
+      const list = data.items || data.results || data.predictions || data.ingredients || data.foods || data.classes || data.labels || data.data;
+      if (Array.isArray(list)) list.forEach(push); else push(data);
+    }
+    return Array.from(new Set(out.map(cnIngredient).filter(Boolean))).slice(0, 8);
+  }
+
+  async function recognizePhotos(files) {
+    const cfg = window.FRESH_VISION || {};
+    if (!cfg.endpoint) { toast('尚未配置图像识别 API，请在页面配置 endpoint'); return; }
+    const pv = $('#ap-preview'); if (!pv) return;
+    pv.style.display = 'block';
+    pv.innerHTML = '<div style="font-size:15px;color:var(--muted)">🔍 正在调用视觉 API 识别…</div>';
+    delete pv.dataset.photoNames;
+    const fd = new FormData();
+    Array.from(files || []).forEach((f, i) => fd.append('image', f, f.name || ('photo' + i + '.jpg')));
+    const headers = {};
+    if (cfg.key) headers.Authorization = `Bearer ${cfg.key}`;
+    try {
+      const res = await fetch(cfg.endpoint, { method: 'POST', headers, body: fd });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const names = parseVisionNames(await res.json());
+      if (!names.length) { toast('没有识别到食材，请换张照片试试'); pv.innerHTML = ''; return; }
+      pv.innerHTML = '<div style="font-size:15px;color:var(--muted);margin-bottom:6px">🔍 识别到食材：</div>' + names.map(n => `<div class="ap-row"><span>🥗</span><span>${esc(n)}</span></div>`).join('');
+      pv.dataset.photoNames = JSON.stringify(names);
+      toast('识别完成，点「识别并入库」确认');
+    } catch (e) {
+      pv.innerHTML = '';
+      toast('图像识别失败：' + (e.message || '网络错误'));
+    }
+  }
+
   function bindAddPanel() {
     if (addMode === 'photo') {
       const files = $('#af-photos');
-      if (files) files.addEventListener('change', () => {
-        const pv = $('#ap-preview'); pv.style.display = 'block';
-        pv.innerHTML = '<div style="font-size:15px;color:var(--muted);margin-bottom:6px">🔍 照片识别到 3 样食材：</div>' +
-          [['鲜鸡蛋','6 枚','冷藏室中层'],['全脂牛奶','1 盒','冷藏室上层'],['番茄','4 个','果蔬抽屉']].map(x => `<div class="ap-row"><span>🥗</span><span>${x[0]}</span><b>${x[1]}</b></div>`).join('');
-        pv.dataset.photoBatch = '1';
-      });
+      if (files) files.addEventListener('change', () => recognizePhotos(files.files));
     }
   }
   function renderAddPanel() {
@@ -1482,6 +1520,10 @@
           <button class="al-close" data-action="close-app-layer" aria-label="关闭">${ICON.x}</button>
         </div>
 
+        <div class="add-tabs">
+          <button class="add-tab ${addMode==='manual'?'active':''}" data-action="add-tab" data-mode="manual">${dishIcon('✍️')} 手动<i>推荐</i></button>
+          <button class="add-tab ${addMode==='photo'?'active':''}" data-action="add-tab" data-mode="photo">${dishIcon('📷')} 拍照识别</button>
+        </div>
         ${addMode === 'manual' ? `<div class="batch-toggle">
           <button class="batch-seg ${!addBatch?'active':''}" data-action="add-batch" data-batch="single">单件</button>
           <button class="batch-seg ${addBatch?'active':''}" data-action="add-batch" data-batch="batch">批量</button>
@@ -1520,12 +1562,11 @@
   function addSave() {
     if (addMode === 'photo') {
       const pv = $('#ap-preview');
-      if (!pv || !pv.dataset.photoBatch) { toast('请先上传食材照片'); return; }
-      const added = [
-        addNewItem('鲜鸡蛋', 6, '枚', '冷藏室中层', 8, true),
-        addNewItem('全脂牛奶', 1, '盒', '冷藏室上层', 8, true),
-        addNewItem('番茄', 4, '个', '果蔬抽屉', 7, true)
-      ];
+      if (!pv || !pv.dataset.photoNames) { toast('请先上传照片并完成识别'); return; }
+      let names = [];
+      try { names = JSON.parse(pv.dataset.photoNames); } catch (e) { names = []; }
+      if (!names.length) { toast('没有可入库的识别结果'); return; }
+      const added = names.map(name => addNewItem(name, 1, '份', defaultLayerForFood(name), 7, true));
       closeModal(); announceAdded(added);
       return;
     }
