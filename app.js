@@ -109,6 +109,7 @@
     restock: '购物车', product: '商品详情', cart: '购物车', device: '我的', nfc: '冰箱已连接'
   };
   let lastPage = null;
+  let recipesExpanded = false;
 
   /* ==================== 开场动画 / 新手引导 / 每日提醒：状态与配置 ==================== */
   const introRoot = $('#intro-root');
@@ -152,26 +153,8 @@
       </div>`;
   }
 
-  function renderDock(page) {
+  function renderDock() {
     if (!dockRoot) return;
-    if (page === 'restock') {
-      const selected = STATE.restock.filter(r => STATE.checked.has(r.id));
-      dockRoot.innerHTML = `<div class="cart-bar">
-        <div class="summary-line"><span>已勾选 <b>${selected.length}</b> 项 · 购物车 ${STATE.cart.length} 件</span><span class="muted">冰箱里还有的会提醒你</span></div>
-        <div class="row" style="gap:8px">
-          <button class="btn btn-ghost grow" data-go="cart">查看购物车</button>
-          <button class="btn btn-primary grow" data-action="restock-add-cart">加入购物车</button>
-        </div>
-      </div>`;
-      return;
-    }
-    if (page === 'cart') {
-      dockRoot.innerHTML = `<div class="cart-bar">
-        <button class="btn btn-primary btn-block" data-action="checkout">${STATE.cart.length ? '确认下单 · 食材自动入库' : '去挑点食材吧'}</button>
-        <button class="btn btn-ghost btn-block" data-go="restock" style="margin-top:8px">继续逛补货清单</button>
-      </div>`;
-      return;
-    }
     dockRoot.innerHTML = '';
   }
 
@@ -430,19 +413,18 @@
   function pageRecipes() {
     return `<div class="app-hero"><h2>今日食谱</h2><p>优先用掉快到期的食材</p></div>
       <div class="ai-entry" data-action="ai-open">
-        <div class="ai-entry-top"><span class="ai-orb">🍳</span><div><h4>今天吃什么</h4><p>想吃什么就输入什么，冰箱食材帮你对照着买</p></div><span class="ai-arrow">›</span></div>
-        <div class="ai-entry-chips">${RECIPES.map(r => `<button type="button" data-action="ai-quick" data-q="${esc(r.name)}">${esc(r.name)}</button>`).join('')}</div>
+        <div class="ai-entry-top"><span class="ai-orb">🍳</span><div><h4>今天吃什么</h4></div><span class="ai-arrow">›</span></div>
+        <div class="ai-entry-chips">${RECIPES.slice(0, 3).map(r => `<button type="button" data-action="ai-quick" data-q="${esc(r.name)}">${esc(r.name)}</button>`).join('')}</div>
       </div>
       <div class="sec-title">全部食谱 <span class="more">共 ${RECIPES.length} 道</span></div>
-      ${RECIPES.map(r => `<button class="result-card" data-recipe="${r.id}" style="width:100%;text-align:left">
+      ${(recipesExpanded ? RECIPES : RECIPES.slice(0, 3)).map(r => `<button class="result-card" data-recipe="${r.id}" style="width:100%;text-align:left">
         <div style="display:flex;gap:12px;padding:12px;align-items:center">
           <div class="recipe-thumb"><img src="${r.image}" alt="" loading="lazy" /></div>
           <div class="grow"><div style="font-size:13px;font-weight:700">${esc(r.name)}</div>
-            <div class="muted" style="margin-top:3px">⏱ ${r.minutes} 分钟 · ${r.ingredients.filter(x=>x.have).length}/${r.ingredients.length} 食材已有</div>
-            ${r.expiring.length ? `<span class="pill-tag yellow" style="margin-top:5px;display:inline-block">能用掉快到期食材：${r.expiring.map(esc).join('、')}</span>` : ''}
-            ${r.video ? '<span class="video-mini">▶ 视频教程</span>' : ''}
+            <div class="muted" style="margin-top:3px">⏱ ${r.minutes} 分钟</div>
           </div><span style="color:var(--muted)">›</span>
-        </div></button>`).join('')}`;
+        </div></button>`).join('')}
+      ${RECIPES.length > 3 ? `<button class="more-btn" data-action="toggle-recipes">${recipesExpanded ? '收起' : `查看更多（${RECIPES.length - 3} 道）`} ›</button>` : ''}`;
   }
 
   function pageRecipe() {
@@ -480,7 +462,6 @@
     const recommendations = STATE.restock.filter(r => r.status === '待补');
     return `<div class="cart-page">
       <div class="cart-page-title"><h2>购物车 <span>(${rows.length})</span></h2><button class="mini-btn" data-action="cart-manage">管理</button></div>
-      <div class="cart-promos"><span>满 99 减 10</span><span>领券中心</span><span>产地直采 · 新鲜直达</span></div>
       ${dupCount ? `<div class="cart-top-alert">🥬 有 <b>${dupCount}</b> 样冰箱里还有，记得先核对</div>` : ''}
       ${rows.length ? `
         <div class="cart-store-head"><span class="r-check ${allSelected ? 'on' : ''}" data-action="cart-select-all">${allSelected ? '✓' : ''}</span><span>全选</span><b>鲜知超市 ›</b></div>
@@ -489,7 +470,6 @@
           <span class="cart-thumb">${dishIcon(r.p.emoji || '🥬')}</span>
           <div class="cart-item-main">
             <div class="cart-item-title">${esc(r.p.name || r.c.name)}</div>
-            <div class="cart-tags"><span>产地直采</span><span>新鲜直达</span></div>
             ${r.dup && r.dup.hit ? `<div class="cart-inline">冰箱里还有 ${r.dup.item.quantity}${esc(r.dup.item.unit)}</div>` : ''}
             <div class="cart-item-bottom">
               <span class="cart-price">¥${(r.p.price || 9.9).toFixed(2)}</span>
@@ -995,20 +975,17 @@
       <div class="modal-card ai-modal" data-stop="1">
         <div class="ai-modal-head">
           <span class="ai-orb">🍳</span>
-          <div class="grow"><h3>今天吃什么</h3><p>先说想吃什么，再帮你对照冰箱</p></div>
+          <div class="grow"><h3>今天吃什么</h3><p>输入菜名，帮你找做法和要买的菜</p></div>
           <button class="al-close" data-action="close-ai" aria-label="关闭">${ICON.x}</button>
         </div>
         <div class="ai-input-row">
-          <input id="ai-input" class="ai-input" placeholder="任意菜名都可以，比如：麻辣香锅、奶油蘑菇汤…" />
+          <input id="ai-input" class="ai-input" placeholder="输入想吃的菜" />
           <button class="btn btn-primary" data-action="ai-submit">看看怎么做</button>
         </div>
         <div class="ai-chips">
-          ${RECIPES.map(r => `<button class="ai-chip" data-action="ai-quick" data-q="${esc(r.name)}">${dishIcon(r.emoji)} ${esc(r.name)}</button>`).join('')}
+          ${RECIPES.slice(0, 3).map(r => `<button class="ai-chip" data-action="ai-quick" data-q="${esc(r.name)}">${dishIcon(r.emoji)} ${esc(r.name)}</button>`).join('')}
           <button class="ai-chip" data-action="ai-quick" data-q="可乐鸡翅">🍗 可乐鸡翅</button>
-          <button class="ai-chip" data-action="ai-quick" data-q="麻辣香锅">🌶️ 麻辣香锅</button>
-          <button class="ai-chip" data-action="ai-quick" data-q="减脂餐">🥗 减脂餐</button>
         </div>
-        <div class="ai-footnote">联网识别你想做的菜，自动找做法和教学视频，再对照冰箱算要买的食材</div>
       </div>
     </div>`;
     setTimeout(() => { const el = $('#ai-input'); if (el) el.focus(); }, 50);
@@ -1934,6 +1911,7 @@
         return;
       }
       if (a === 'home-module') { STATE.homeModule = actionEl.dataset.module; renderApp(); return; }
+      if (a === 'toggle-recipes') { recipesExpanded = !recipesExpanded; renderApp(); return; }
       if (a === 'expiry-day') { STATE.expiryDay = +actionEl.dataset.day; renderApp(); return; }
       if (a === 'expiry-all') { showExpiryModal(expiryItems()); return; }
       if (a === 'pupu-open') { showPupuModal(); return; }
