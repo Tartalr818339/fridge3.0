@@ -128,12 +128,12 @@
   }
   const TOUR_STEPS = [
     { title: '欢迎来到全新的鲜知', desc: '这是一个还没有数据的全新冰箱。跟着提示点一遍，完成一次完整探索。', page: 'home', target: '.phone-frame' },
-    { title: '添加第一份食材', desc: '点这个入口，之后可以拍照、手动或一句话录入食材。', page: 'home', target: '.tab-add' },
+    { title: '添加第一份食材', desc: '点这个入口手动录入，也可以点话筒直接说出来。', page: 'home', target: '.tab-add' },
     { title: '先看临期提醒', desc: '这里按紧急程度排序；以后有快到期食材时，越靠前越该先吃掉。', page: 'home', homeModule: 'expiry', target: '.alert-banner', autoScroll: true },
     { title: '按位置找食材', desc: '冰箱分区按真实位置管理，冷藏、冷冻一目了然。', page: 'home', homeModule: 'zones', target: '.fridge-view.appliance', autoScroll: true },
     { title: '匹配你的冰箱', desc: '点这里切换冰箱类型，让分区和你家冰箱一致。', page: 'home', homeModule: 'zones', target: '.mac-primary' },
     { title: '看看今天吃什么', desc: '食谱会优先推荐能用掉临期食材的菜，点这里开始挑菜。', page: 'recipes', target: '.ai-entry' },
-    { title: '把缺的加入补货', desc: '缺什么就在这里勾选补货，买完回来再更新冰箱。', page: 'restock', target: '.restock-item' },
+    { title: '在购物车看要补的货', desc: '推荐缺的食材已经放进购物车，勾选后结算，买完自动同步到冰箱。', page: 'restock', target: '.cart-item' },
     { title: '探索完成', desc: '你已经走完一遍核心流程。现在开始管理你的冰箱吧。', page: 'home', target: '.phone-frame' }
   ];
   let tourActive = false;
@@ -1626,7 +1626,10 @@
     };
     ITEMS.splice(0, ITEMS.length);
     STATE.restock = [];
-    STATE.cart = [];
+    STATE.cart = [
+      { sku: 'SKU-EGG-6', name: '谷饲鲜鸡蛋 6 枚装', qty: 1, selected: true },
+      { sku: 'SKU-MILK-1L', name: '全脂鲜牛奶 1L', qty: 1, selected: true }
+    ];
     STATE.checked.clear();
     STATE.appPage = 'home';
     STATE.homeModule = 'expiry';
