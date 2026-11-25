@@ -470,16 +470,12 @@
       const p = PRODUCTS.find(x => x.sku === c.sku) || {};
       return { c, idx, p, dup: checkDuplicate(c.sku), selected: c.selected !== false };
     });
-    const chosen = rows.filter(r => r.selected);
-    const allSelected = rows.length > 0 && chosen.length === rows.length;
-    const total = chosen.reduce((sum, r) => sum + (r.p.price || 9.9) * r.c.qty, 0);
     const dupCount = rows.filter(r => r.dup && r.dup.hit).length;
     const recommendations = STATE.restock.filter(r => r.status === '待补');
     return `<div class="cart-page">
       <div class="cart-page-title"><h2>购物车 <span>(${rows.length})</span></h2><button class="mini-btn" data-action="cart-manage">管理</button></div>
       ${dupCount ? `<div class="cart-top-alert">🥬 有 <b>${dupCount}</b> 样冰箱里还有，记得先核对</div>` : ''}
       ${rows.length ? `
-        <div class="cart-store-head"><span class="r-check ${allSelected ? 'on' : ''}" data-action="cart-select-all">${allSelected ? '✓' : ''}</span><span>全选</span><b>鲜知超市 ›</b></div>
         ${rows.map(r => `<div class="cart-item restock-item">
           <span class="r-check ${r.selected ? 'on' : ''}" data-action="cart-select" data-idx="${r.idx}">${r.selected ? '✓' : ''}</span>
           <span class="cart-thumb">${dishIcon(r.p.emoji || '🥬')}</span>
