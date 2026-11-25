@@ -401,8 +401,8 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .cart-recommend h4 span{font-size:14px;color:var(--muted);font-weight:400;margin-left:6px}
 .cart-recommend-list{display:flex;gap:7px;flex-wrap:wrap}
 .checkout-dock{display:flex;align-items:center;gap:6px}
-.checkout-dock .btn{margin-left:auto;min-width:104px}
-.cart-total{text-align:right;margin-left:auto;line-height:1.2}
+.checkout-dock .btn{margin-left:0;min-width:104px}
+.cart-total{display:flex;flex-direction:column;align-items:flex-end;text-align:right;margin-left:auto;line-height:1.2}
 .cart-total small{display:block;font-size:13px;color:var(--muted)}
 .cart-total b{font-size:18px;color:#E4393C}
 
