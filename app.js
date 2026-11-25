@@ -438,6 +438,7 @@
           <div class="recipe-thumb"><img src="${r.image}" alt="" loading="lazy" /></div>
           <div class="grow"><div style="font-size:15px;font-weight:700">${esc(r.name)}</div>
             <div class="muted" style="margin-top:3px">⏱ ${r.minutes} 分钟</div>
+            ${r.expiring.length ? `<span class="pill-tag yellow" style="margin-top:5px;display:inline-block">⏰ 用掉临期${r.expiring.map(esc).join('、')}</span>` : ''}
           </div><span style="color:var(--muted)">›</span>
         </div></button>`).join('')}
       ${RECIPES.length > 3 ? `<button class="more-btn" data-action="toggle-recipes">${recipesExpanded ? '收起' : `查看更多（${RECIPES.length - 3} 道）`} ›</button>` : ''}`;
