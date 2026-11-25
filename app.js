@@ -153,8 +153,23 @@
       </div>`;
   }
 
-  function renderDock() {
+  function renderDock(page) {
     if (!dockRoot) return;
+    if (page === 'restock' || page === 'cart') {
+      const chosen = STATE.cart.filter(c => c.selected !== false);
+      const total = chosen.reduce((sum, c) => {
+        const p = PRODUCTS.find(x => x.sku === c.sku);
+        return sum + (p ? p.price : 9.9) * c.qty;
+      }, 0);
+      const allSelected = STATE.cart.length > 0 && chosen.length === STATE.cart.length;
+      dockRoot.innerHTML = `<div class="cart-bar checkout-dock">
+        <span class="r-check ${allSelected ? 'on' : ''}" data-action="cart-select-all">${allSelected ? '✓' : ''}</span>
+        <span>全选</span>
+        <div class="cart-total"><small>合计</small><b>¥${total.toFixed(2)}</b></div>
+        <button class="btn btn-primary" data-action="checkout">结算(${chosen.length})</button>
+      </div>`;
+      return;
+    }
     dockRoot.innerHTML = '';
   }
 
@@ -479,11 +494,6 @@
         </div>`).join('')}
       ` : `<div class="cart-empty">购物车还是空的，去「今日食谱」看看要补什么</div>`}
       ${recommendations.length ? `<div class="cart-recommend"><h4>推荐补货 <span>点一下加入购物车</span></h4><div class="cart-recommend-list">${recommendations.map(r => `<button class="chip" data-action="restock-to-cart" data-id="${r.id}">${skuByName(r.name) ? '＋' : '·'} ${esc(r.name)}</button>`).join('')}</div></div>` : ''}
-      <div class="cart-checkout-bar">
-        <span class="r-check ${allSelected ? 'on' : ''}" data-action="cart-select-all">${allSelected ? '✓' : ''}</span><span>全选</span>
-        <div class="cart-total"><small>合计</small><b>¥${total.toFixed(2)}</b></div>
-        <button class="btn btn-primary" data-action="checkout">结算(${chosen.length})</button>
-      </div>
     </div>`;
   }
 

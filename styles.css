@@ -382,7 +382,7 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .qty-ctrl{display:flex;align-items:center;gap:8px}
 .qty-ctrl button{width:30px;height:30px;border-radius:7px;background:#F0F4F1;font-weight:700;font-size:13px}
 /* 淘宝式购物车 */
-.cart-page{padding-bottom:78px}
+.cart-page{padding-bottom:12px}
 .cart-page-title{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .cart-page-title h2{font-size:21px}
 .cart-page-title h2 span{font-size:14px;color:var(--muted);font-weight:500}
@@ -401,8 +401,8 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .cart-recommend h4{font-size:14px;margin-bottom:9px}
 .cart-recommend h4 span{font-size:12px;color:var(--muted);font-weight:400;margin-left:6px}
 .cart-recommend-list{display:flex;gap:7px;flex-wrap:wrap}
-.cart-checkout-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(70px + env(safe-area-inset-bottom,0px));width:min(390px,calc(100% - 24px));z-index:9;display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:9px 11px;box-shadow:0 -4px 18px rgba(18,61,40,.08)}
-.cart-checkout-bar .btn{margin-left:auto;min-width:104px}
+.checkout-dock{display:flex;align-items:center;gap:6px}
+.checkout-dock .btn{margin-left:auto;min-width:104px}
 .cart-total{text-align:right;margin-left:auto;line-height:1.2}
 .cart-total small{display:block;font-size:11px;color:var(--muted)}
 .cart-total b{font-size:16px;color:#E4393C}
