@@ -431,7 +431,7 @@
     return `<div class="app-hero"><h2>今日食谱</h2><p>优先用掉快到期的食材</p></div>
       <div class="ai-entry" data-action="ai-open">
         <div class="ai-entry-top"><span class="ai-orb">🍳</span><div><h4>今天吃什么</h4><p>想吃什么就输入什么，冰箱食材帮你对照着买</p></div><span class="ai-arrow">›</span></div>
-        <div class="ai-entry-chips"><span>番茄炒蛋</span><span>香煎三文鱼</span><span>豆腐汤</span></div>
+        <div class="ai-entry-chips">${RECIPES.map(r => `<button type="button" data-action="ai-quick" data-q="${esc(r.name)}">${esc(r.name)}</button>`).join('')}</div>
       </div>
       <div class="sec-title">全部食谱 <span class="more">共 ${RECIPES.length} 道</span></div>
       ${RECIPES.map(r => `<button class="result-card" data-recipe="${r.id}" style="width:100%;text-align:left">
@@ -953,10 +953,9 @@
           <button class="btn btn-primary" data-action="ai-submit">看看怎么做</button>
         </div>
         <div class="ai-chips">
-          <button class="ai-chip" data-action="ai-quick" data-q="番茄炒蛋">🍳 番茄炒蛋</button>
+          ${RECIPES.map(r => `<button class="ai-chip" data-action="ai-quick" data-q="${esc(r.name)}">${dishIcon(r.emoji)} ${esc(r.name)}</button>`).join('')}
           <button class="ai-chip" data-action="ai-quick" data-q="可乐鸡翅">🍗 可乐鸡翅</button>
           <button class="ai-chip" data-action="ai-quick" data-q="麻辣香锅">🌶️ 麻辣香锅</button>
-          <button class="ai-chip" data-action="ai-quick" data-q="奶油蘑菇汤">🍲 奶油蘑菇汤</button>
           <button class="ai-chip" data-action="ai-quick" data-q="减脂餐">🥗 减脂餐</button>
         </div>
         <div class="ai-footnote">联网识别你想做的菜，自动找做法和教学视频，再对照冰箱算要买的食材</div>
@@ -965,12 +964,25 @@
     setTimeout(() => { const el = $('#ai-input'); if (el) el.focus(); }, 50);
   }
 
+  let aiResultSeq = 0;
   async function renderAiResult(query) {
     const q = String(query || '').trim();
     if (!q) { toast('先说说想吃什么菜'); const el = $('#ai-input'); if (el) el.focus(); return; }
-    showAiLoading(q);
-    const apiRecipe = await fetchApiRecipe(q);
-    const { recipe, mode } = apiRecipe ? { recipe: apiRecipe, mode: 'api' } : aiResolveRecipe(q);
+    const seq = ++aiResultSeq;
+    const normalized = q.replace(/\s+/g, '');
+    const exactRecipe = RECIPES.find(r => r.name.replace(/\s+/g, '') === normalized);
+    let result;
+    if (exactRecipe) {
+      result = { recipe: exactRecipe, mode: 'exact' };
+    } else if (AI_DISHES.some(d => d.name.replace(/\s+/g, '') === normalized)) {
+      result = aiResolveRecipe(q);
+    } else {
+      showAiLoading(q);
+      const apiRecipe = await fetchApiRecipe(q);
+      if (seq !== aiResultSeq || !modalRoot.querySelector('.ai-modal')) return;
+      result = apiRecipe ? { recipe: apiRecipe, mode: 'api' } : aiResolveRecipe(q);
+    }
+    const { recipe, mode } = result;
     STATE.aiDish = recipe;
     const { have, need, expiringInRecipe } = aiAnalyzeRecipe(recipe);
     const chipHtml = have.length
@@ -1841,7 +1853,7 @@
         if (e.target.closest('[data-stop]')) return;
         closeModal(); return;
       }
-      if (a === 'close-app-layer' || a === 'close-ai' || a === 'close-checkout') { closeModal(); return; }
+      if (a === 'close-app-layer' || a === 'close-ai' || a === 'close-checkout') { aiResultSeq++; closeModal(); return; }
       if (a === 'app-open-layer') { showAppLayerModal(actionEl.dataset.layer); return; }
       if (a === 'layer-view-all') { closeModal(); STATE.appPage = 'fridge'; renderApp(); return; }
       if (a === 'fridge-model') { showFridgeModelModal(); return; }

@@ -269,7 +269,7 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .ai-entry-top p{font-size:13px;color:#C7EED6;margin-top:2px}
 .ai-arrow{margin-left:auto;font-size:22px;color:#C7EED6}
 .ai-entry-chips{display:flex;gap:6px;margin-top:11px;position:relative;flex-wrap:wrap}
-.ai-entry-chips span{font-size:13px;color:#DFF5E7;background:rgba(255,255,255,.13);padding:4px 9px;border-radius:999px}
+.ai-entry-chips button{font-size:13px;color:#DFF5E7;background:rgba(255,255,255,.13);padding:4px 9px;border:0;border-radius:999px;cursor:pointer}
 /* 配菜弹窗 / 食材录入 */
 .ai-modal{max-width:400px}
 .ai-modal-head{display:flex;gap:11px;align-items:center;margin-bottom:16px}
