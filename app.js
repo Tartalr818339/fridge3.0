@@ -458,7 +458,7 @@
   function pageRecipe() {
     const r = RECIPES.find(x => x.id === STATE.recipeId) || RECIPES[0];
     return `<button class="back-link" data-go="recipes">‹ 返回食谱列表</button>
-      <div class="recipe-banner" style="background:${r.thumb}"><img class="rb-photo" src="${r.image}" alt="" /><h2>${esc(r.name)}</h2><p>⏱ ${r.minutes} 分钟 · 5 星好评</p></div>
+      <div class="recipe-banner" style="background:${r.thumb}"><img class="rb-photo" src="${r.image}" alt="" /><div class="rb-copy"><h2>${esc(r.name)}</h2><p>⏱ ${r.minutes} 分钟 · 5 星好评</p></div></div>
       ${r.expiring.length ? `<div class="expiring-tip">⏰ <span>用得快到期的食材：<b>${r.expiring.map(esc).join('、')}</b>，今天做正合适</span></div>` : ''}
       <div class="sec-title">所需食材 <span class="more">标注「已有 / 需补充」</span></div>
       <div class="card">${r.ingredients.map(ing => `<div class="ing-item">
