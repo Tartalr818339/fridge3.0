@@ -101,12 +101,12 @@
   const TABS = [
     { key: 'home', icon: navIcon('<path d="M12 2 2 11h3v10h6v-6h2v6h6V11h3L12 2z"/>'), label: '首页' },
     { key: 'recipes', icon: navIcon('<path d="M3 11h18a1 1 0 0 1 1 1c0 4.4-4.5 8-10 8S2 16.4 2 12a1 1 0 0 1 1-1zm5-8h2v7H8V3zm4 0h2v7h-2V3z"/>'), label: '食谱' },
-    { key: 'restock', icon: navIcon('<path d="M2 3h2.6l1 3.5h14.1l-2.3 8.5H7.2L6.5 18h11.8v2H5.2a2 2 0 0 1-2-2L2 3zm4.5 17a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm9.5 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>'), label: '补货' },
+    { key: 'restock', icon: navIcon('<path d="M2 3h2.6l1 3.5h14.1l-2.3 8.5H7.2L6.5 18h11.8v2H5.2a2 2 0 0 1-2-2L2 3zm4.5 17a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm9.5 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>'), label: '购物车' },
     { key: 'device', icon: navIcon('<path d="M19.4 13a7.8 7.8 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.5h-4l-.4 2.4a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.8 7.8 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.4h4l.4-2.4a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5L19.4 13zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/>'), label: '我的' }
   ];
   const PAGE_TITLES = {
     home: '鲜知', fridge: '我的冰箱', recipes: '今日食谱', recipe: '菜谱详情',
-    restock: '补货清单', product: '商品详情', cart: '购物车', device: '我的', nfc: '冰箱已连接'
+    restock: '购物车', product: '商品详情', cart: '购物车', device: '我的', nfc: '冰箱已连接'
   };
   let lastPage = null;
 
@@ -457,7 +457,7 @@
           ${r.expiring.includes(ing.name) ? '<span class="pill-tag yellow">快到期</span>' : ''}
           <span class="ing-flag ${ing.have ? 'have' : 'miss'}">${ing.have ? '已有' : '需补充'}</span>
         </div>`).join('')}</div>
-      ${r.ingredients.some(x => !x.have) ? `<button class="btn btn-primary btn-block" data-add-missing="${r.id}" style="margin-top:12px">把缺的食材加入补货清单</button>` : ''}
+      ${r.ingredients.some(x => !x.have) ? `<button class="btn btn-primary btn-block" data-add-missing="${r.id}" style="margin-top:12px">把缺的食材加入购物车</button>` : ''}
       <div class="sec-title">做法步骤</div>
       <div class="card">${r.steps.map((s, i) => `<div class="step-item"><span class="step-num">${i+1}</span><span>${esc(s)}</span></div>`).join('')}</div>
       ${r.video ? `<div class="sec-title">视频教程 <span class="more">${esc(r.video.author)}</span></div>
@@ -469,31 +469,42 @@
   }
 
   function pageRestock() {
-    const list = STATE.restock;
-    return `<div class="app-hero"><h2>补货清单</h2><p>冰箱里缺的都在这里，买完回来更新</p></div>
-      <button class="pupu-entry" data-action="pupu-open">
-        <span class="pu-logo">朴</span>
-        <span class="pu-txt"><h4>去朴朴超市采购</h4><p>买完回来点一下就好</p></span>
-        <span class="pu-go">前往 ›</span>
-      </button>
-      <div class="row" style="margin-bottom:12px;gap:6px;flex-wrap:wrap">
-        <span class="pill-tag gray">来源：快到期提醒 · 手动 · 食谱</span>
-        <span class="pill-tag gray" style="margin-left:auto">${list.filter(r=>r.status==='待补').length} 项待补</span>
+    const rows = STATE.cart.map((c, idx) => {
+      const p = PRODUCTS.find(x => x.sku === c.sku) || {};
+      return { c, idx, p, dup: checkDuplicate(c.sku), selected: c.selected !== false };
+    });
+    const chosen = rows.filter(r => r.selected);
+    const allSelected = rows.length > 0 && chosen.length === rows.length;
+    const total = chosen.reduce((sum, r) => sum + (r.p.price || 9.9) * r.c.qty, 0);
+    const dupCount = rows.filter(r => r.dup && r.dup.hit).length;
+    const recommendations = STATE.restock.filter(r => r.status === '待补');
+    return `<div class="cart-page">
+      <div class="cart-page-title"><h2>购物车 <span>(${rows.length})</span></h2><button class="mini-btn" data-action="cart-manage">管理</button></div>
+      <div class="cart-promos"><span>满 99 减 10</span><span>领券中心</span><span>产地直采 · 新鲜直达</span></div>
+      ${dupCount ? `<div class="cart-top-alert">🥬 有 <b>${dupCount}</b> 样冰箱里还有，记得先核对</div>` : ''}
+      ${rows.length ? `
+        <div class="cart-store-head"><span class="r-check ${allSelected ? 'on' : ''}" data-action="cart-select-all">${allSelected ? '✓' : ''}</span><span>全选</span><b>鲜知超市 ›</b></div>
+        ${rows.map(r => `<div class="cart-item restock-item">
+          <span class="r-check ${r.selected ? 'on' : ''}" data-action="cart-select" data-idx="${r.idx}">${r.selected ? '✓' : ''}</span>
+          <span class="cart-thumb">${dishIcon(r.p.emoji || '🥬')}</span>
+          <div class="cart-item-main">
+            <div class="cart-item-title">${esc(r.p.name || r.c.name)}</div>
+            <div class="cart-tags"><span>产地直采</span><span>新鲜直达</span></div>
+            ${r.dup && r.dup.hit ? `<div class="cart-inline">冰箱里还有 ${r.dup.item.quantity}${esc(r.dup.item.unit)}</div>` : ''}
+            <div class="cart-item-bottom">
+              <span class="cart-price">¥${(r.p.price || 9.9).toFixed(2)}</span>
+              <div class="qty-ctrl"><button data-action="cart-qty" data-idx="${r.idx}" data-d="-1">−</button><span>${r.c.qty}</span><button data-action="cart-qty" data-idx="${r.idx}" data-d="1">+</button></div>
+            </div>
+          </div>
+        </div>`).join('')}
+      ` : `<div class="cart-empty">购物车还是空的，去「今日食谱」看看要补什么</div>`}
+      ${recommendations.length ? `<div class="cart-recommend"><h4>推荐补货 <span>点一下加入购物车</span></h4><div class="cart-recommend-list">${recommendations.map(r => `<button class="chip" data-action="restock-to-cart" data-id="${r.id}">${skuByName(r.name) ? '＋' : '·'} ${esc(r.name)}</button>`).join('')}</div></div>` : ''}
+      <div class="cart-checkout-bar">
+        <span class="r-check ${allSelected ? 'on' : ''}" data-action="cart-select-all">${allSelected ? '✓' : ''}</span><span>全选</span>
+        <div class="cart-total"><small>合计</small><b>¥${total.toFixed(2)}</b></div>
+        <button class="btn btn-primary" data-action="checkout">结算(${chosen.length})</button>
       </div>
-      ${list.map(r => {
-        const checked = STATE.checked.has(r.id);
-        return `<div class="restock-item ${checked ? 'checked' : ''} ${r.status === '暂不补货' ? 'skipped' : ''}">
-          <div class="r-check ${checked ? 'on' : ''}" data-action="toggle-check" data-id="${r.id}">${checked ? '✓' : ''}</div>
-          <span class="r-emoji">${emojiFor(r.name)}</span>
-          <div class="grow"><div class="r-name">${esc(r.name)}</div><div class="r-meta">建议 ${r.suggestQty}${esc(r.unit)} · <span class="source-tag">${sourceLabel(r.source)}</span></div></div>
-          ${r.status === '已加购' ? '<span class="r-status done">已加购</span>' : r.status === '暂不补货' ? '<span class="r-status skip">暂不补货</span>' : ''}
-        </div>`;
-      }).join('')}
-      <div class="sec-title">顺手逛逛 <span class="more">点开看看冰箱里还有没有</span></div>
-      <div class="row" style="gap:8px;flex-wrap:wrap">
-        ${PRODUCTS.slice(0,4).map(p => `<button class="chip" data-product="${p.sku}" style="font-size:13px">${p.emoji} ${esc(p.name)}</button>`).join('')}
-      </div>
-      </div>`;
+    </div>`;
   }
 
   function pageProduct() {
@@ -517,19 +528,7 @@
   }
 
   function pageCart() {
-    const dupCount = STATE.cart.filter(c => checkDuplicate(c.sku)?.hit).length;
-    return `<div class="app-hero"><h2>购物车</h2><p>共 ${STATE.cart.length} 件商品</p></div>
-      ${dupCount ? `<div class="cart-top-alert">🥬 有 <b>${dupCount}</b> 样冰箱里还有，建议先看看再下单</div>` : ''}
-      ${STATE.cart.length ? STATE.cart.map((c, idx) => {
-        const dup = checkDuplicate(c.sku);
-        return `<div class="cart-row">
-          <span class="cr-emoji">${emojiFor(c.name)}</span>
-          <div class="grow"><div class="cr-name">${esc(c.name)}</div>
-            ${dup && dup.hit ? `<span class="cart-inline">冰箱里还有 ${dup.item.quantity}${esc(dup.item.unit)}</span>` : ''}
-          </div>
-          <div class="qty-ctrl"><button data-action="cart-qty" data-idx="${idx}" data-d="-1">−</button><span>${c.qty}</span><button data-action="cart-qty" data-idx="${idx}" data-d="1">+</button></div>
-        </div>`;
-      }).join('') : `<div class="card" style="text-align:center;padding:30px;color:var(--muted)">购物车是空的，去补货清单看看？</div>`}`;
+    return pageRestock();
   }
 
   function pageDevice() {
@@ -558,7 +557,14 @@
       'App 下单': '刚买的', 'AI 录入': '快速录入', 'NFC 碰一碰': '碰一碰' })[s] || s;
   }
   function skuByName(name) {
-    return Object.keys(PRODUCT_MAPPING).find(sku => PRODUCT_MAPPING[sku] === name);
+    const n = String(name || '').trim();
+    const exact = Object.keys(PRODUCT_MAPPING).find(sku => PRODUCT_MAPPING[sku] === n);
+    if (exact) return exact;
+    return Object.keys(PRODUCT_MAPPING).find(sku => {
+      const mapped = PRODUCT_MAPPING[sku] || '';
+      const prod = PRODUCTS.find(p => p.sku === sku);
+      return mapped.includes(n) || n.includes(mapped) || (prod && (prod.name.includes(n) || n.includes(prod.name)));
+    });
   }
 
   /* ==================== 重复购买提醒弹窗 ==================== */
@@ -688,10 +694,11 @@
 
   /* ============ 下单 → 自动同步到冰箱食材库 ============ */
   function doCheckout() {
-    if (!STATE.cart.length) { toast('购物车是空的'); return; }
+    const chosen = STATE.cart.filter(c => c.selected !== false);
+    if (!chosen.length) { toast('请先勾选要结算的商品'); return; }
     const synced = [];
     const filled = [];
-    STATE.cart.forEach(c => {
+    chosen.forEach(c => {
       const newItem = purchaseToItem(c.sku);
       if (!newItem) return;
       const existing = ITEMS.find(i => i.name === newItem.name);
@@ -715,7 +722,7 @@
         return false;
       });
     });
-    STATE.cart = [];
+    STATE.cart = STATE.cart.filter(c => !chosen.includes(c));
     renderApp();
     showCheckoutModal(synced, filled);
   }
@@ -821,18 +828,61 @@
     [/鸡/, 'chicken'], [/鱼/, 'fish'], [/蔬菜|青菜|时蔬/, 'vegetable']
   ];
   const API_ING_CN = {
-    'egg': '鲜鸡蛋', 'eggs': '鲜鸡蛋', 'tomato': '番茄', 'tomatoes': '番茄',
-    'salmon': '三文鱼', 'chicken breast': '鸡胸肉', 'chicken breasts': '鸡胸肉', 'chicken': '鸡胸肉',
+    'egg': '鲜鸡蛋', 'eggs': '鲜鸡蛋', 'egg yolk': '蛋黄', 'egg whites': '蛋白',
+    'tomato': '番茄', 'tomatoes': '番茄', 'cherry tomatoes': '小番茄', 'tomato paste': '番茄酱',
+    'salmon': '三文鱼', 'chicken breast': '鸡胸肉', 'chicken breasts': '鸡胸肉', 'chicken': '鸡肉',
+    'chicken wings': '鸡翅', 'chicken stock': '高汤', 'stock cube': '高汤块', 'beef': '牛肉',
+    'beef mince': '牛肉馅', 'pork': '猪肉', 'bacon': '培根', 'sausage': '香肠',
     'tofu': '豆腐', 'broccoli': '西兰花', 'carrot': '胡萝卜', 'carrots': '胡萝卜',
-    'onion': '洋葱', 'onions': '洋葱', 'mushroom': '蘑菇', 'mushrooms': '蘑菇',
+    'onion': '洋葱', 'onions': '洋葱', 'spring onion': '葱', 'spring onions': '葱',
+    'mushroom': '蘑菇', 'mushrooms': '蘑菇', 'shiitake mushrooms': '香菇', 'oyster mushrooms': '平菇',
     'potato': '土豆', 'potatoes': '土豆', 'noodles': '面条', 'rice noodles': '面条',
-    'spaghetti': '面条', 'milk': '全脂牛奶', 'yogurt': '原味酸奶',
-    'cheese': '奶酪', 'cheddar': '奶酪', 'bread': '吐司面包', 'toast': '吐司面包',
-    'apple': '红苹果', 'apples': '红苹果', 'blueberries': '蓝莓',
-    'lemon': '柠檬', 'lime': '柠檬', 'shrimp': '虾', 'prawns': '虾', 'beef': '牛肉',
-    'garlic': '大蒜', 'ginger': '生姜', 'soy sauce': '生抽', 'butter': '黄油',
-    'olive oil': '橄榄油', 'salt': '盐', 'sugar': '糖'
+    'spaghetti': '意大利面', 'rice': '大米', 'flour': '面粉', 'breadcrumbs': '面包糠',
+    'milk': '全脂牛奶', 'coconut milk': '椰奶', 'cream': '淡奶油', 'yogurt': '原味酸奶',
+    'greek yogurt': '希腊酸奶', 'butter': '黄油', 'cheese': '奶酪', 'cheddar': '切达奶酪',
+    'cheddar cheese': '切达奶酪', 'mozzarella': '马苏里拉奶酪', 'parmesan': '帕玛森奶酪',
+    'feta': '羊奶酪', 'bread': '吐司面包', 'toast': '吐司面包',
+    'apple': '红苹果', 'apples': '红苹果', 'banana': '香蕉', 'mango': '芒果',
+    'strawberries': '草莓', 'blueberries': '蓝莓', 'orange': '橙子', 'peach': '桃子',
+    'pineapple': '菠萝', 'lemon': '柠檬', 'limes': '青柠', 'lime': '青柠',
+    'lemon juice': '柠檬汁', 'lime juice': '青柠汁', 'shrimp': '虾', 'prawns': '虾',
+    'garlic': '大蒜', 'ginger': '姜', 'soy sauce': '生抽', 'fish sauce': '鱼露',
+    'oyster sauce': '蚝油', 'sesame oil': '香油', 'olive oil': '橄榄油',
+    'vegetable oil': '食用油', 'sunflower oil': '食用油', 'vinegar': '醋',
+    'balsamic vinegar': '香醋', 'honey': '蜂蜜', 'maple syrup': '枫糖浆',
+    'brown sugar': '红糖', 'sugar': '糖', 'salt': '盐', 'black pepper': '黑胡椒',
+    'pepper': '胡椒', 'chili powder': '辣椒粉', 'paprika': '甜椒粉', 'cumin seeds': '孜然',
+    'ground cumin': '孜然粉', 'turmeric': '姜黄', 'cinnamon': '肉桂', 'cardamom': '小豆蔻',
+    'nutmeg': '肉豆蔻', 'cloves': '丁香', 'bay leaves': '香叶', 'rosemary': '迷迭香',
+    'thyme': '百里香', 'oregano': '牛至', 'basil': '罗勒', 'parsley': '欧芹',
+    'chives': '香葱', 'coriander': '香菜', 'curry powder': '咖喱粉',
+    'thai red curry paste': '泰式红咖喱酱', 'mustard': '芥末', 'ketchup': '番茄酱',
+    'mayonnaise': '沙拉酱', 'hot sauce': '辣椒酱', 'worcestershire sauce': '伍斯特酱',
+    'spinach': '菠菜', 'kale': '羽衣甘蓝', 'cabbage': '卷心菜', 'lettuce': '生菜',
+    'cucumber': '黄瓜', 'zucchini': '西葫芦', 'bell pepper': '彩椒',
+    'green pepper': '青椒', 'red pepper': '红椒', 'roasted peppers': '烤彩椒',
+    'sweetcorn': '甜玉米', 'corn': '玉米', 'peas': '豌豆', 'green beans': '四季豆',
+    'cashews': '腰果', 'peanuts': '花生', 'almonds': '杏仁', 'walnuts': '核桃',
+    'raisins': '葡萄干', 'sultanas': '葡萄干', 'jam': '果酱', 'water': '清水'
   };
+
+  const API_ING_FALLBACK = [
+    [/chicken/i, '鸡肉'], [/beef/i, '牛肉'], [/pork/i, '猪肉'], [/salmon|fish/i, '鱼'],
+    [/shrimp|prawn/i, '虾'], [/tomato/i, '番茄'], [/potato/i, '土豆'], [/mushroom/i, '蘑菇'],
+    [/pepper/i, '彩椒'], [/onion/i, '洋葱'], [/cheese/i, '奶酪'], [/milk/i, '牛奶'],
+    [/sugar/i, '糖'], [/oil/i, '食用油'], [/sauce/i, '调味酱'],
+    [/leaf|leaves|herb|parsley|basil|thyme|rosemary|oregano/i, '香草'],
+    [/seed/i, '种子'], [/rice/i, '米'], [/bread/i, '面包'], [/egg/i, '蛋'],
+    [/berry|apple|orange|lemon|lime|fruit/i, '水果'],
+    [/vegetable|greens|spinach|kale|cabbage|lettuce/i, '蔬菜']
+  ];
+
+  function cnIngredient(name) {
+    const key = String(name || '').toLowerCase().trim();
+    if (API_ING_CN[key]) return API_ING_CN[key];
+    const hit = API_ING_FALLBACK.find(([re]) => re.test(key));
+    return hit ? hit[1] : '食材';
+  }
 
   function queryToApiTerm(q) {
     const s = String(q || '').trim().replace(/^(我想吃|我想要|我想|想吃|来一份|来个|我要|帮我做|帮我|做|吃)/, '').trim();
@@ -851,7 +901,7 @@
       const raw = m['strIngredient' + i];
       if (!raw || !String(raw).trim()) continue;
       const name = String(raw).trim();
-      ingredients.push(API_ING_CN[name.toLowerCase()] || name);
+      ingredients.push(cnIngredient(name));
     }
     const steps = String(m.strInstructions || '').split(/\r?\n|\n/).map(s => s.trim()).filter(Boolean).slice(0, 6);
     if (!steps.length) steps = ['准备好全部食材。', '按照菜谱说明烹饪调味。', '装盘即可享用。'];
@@ -863,7 +913,7 @@
       emoji: meta.emoji, minutes: meta.minutes,
       ingredients, expiring: [], steps,
       image: m.strMealThumb || '',
-      video: m.strYoutube ? { url: m.strYoutube, title: origin + ' 做法教程', author: 'YouTube' } : null,
+      video: { url: `https://search.bilibili.com/all?keyword=${encodeURIComponent(origin + ' 做法')}`, title: origin + ' 做法教程', author: '哔哩哔哩' },
       api: true
     };
   }
@@ -985,6 +1035,7 @@
     const { recipe, mode } = result;
     STATE.aiDish = recipe;
     const { have, need, expiringInRecipe } = aiAnalyzeRecipe(recipe);
+    need.forEach(n => { const sku = skuByName(n); if (sku) addToCart(sku, null); });
     const chipHtml = have.length
       ? have.map(i => `<span class="ai-have-chip ${i.freshness}">${foodIcon(i.name, i.icon)} ${esc(i.name)} · 剩${i.remainingDays}天</span>`).join('')
       : '<span class="ai-none">冰箱里没找到这道菜的明确用料</span>';
@@ -1011,7 +1062,7 @@
         <div class="ai-sec"><h5>🛒 建议补货（${need.length}）</h5><div class="ai-chips-static">${needHtml}</div></div>
         <div class="ai-summary">已有 ${have.length} 样 · 需补 ${need.length} 样${expiringInRecipe.length ? ' · 用掉快到期食材 ' + expiringInRecipe.length + ' 样' : ''}</div>
         <div class="ai-actions">
-          ${need.length ? `<button class="btn btn-primary grow" data-action="ai-add-restock" data-recipe="${recipe.id}">把需补食材加入补货清单</button>` : ''}
+          ${need.length ? `<button class="btn btn-primary grow" data-action="go-cart">已加入购物车 · 去结算</button>` : ''}
           <button class="btn btn-ghost grow" data-action="ai-view-steps">看详细做法</button>
         </div>
         ${recipe.video ? `<a class="btn btn-ghost btn-block" href="${esc(recipe.video.url)}" target="_blank" rel="noopener noreferrer" style="margin-top:8px">▶ 看教学视频 · ${esc(recipe.video.author)}</a>` : ''}
@@ -1926,12 +1977,14 @@
         const { need } = aiAnalyzeRecipe(r);
         let added = 0;
         need.forEach(n => {
-          if (!STATE.restock.some(rs => rs.name === n)) {
+          const sku = skuByName(n);
+          if (sku) addToCart(sku, null);
+          else if (!STATE.restock.some(rs => rs.name === n)) {
             STATE.restock.push({ id: 'rs-' + Date.now() + '-' + (added++), name: n, suggestQty: 1, unit: '份', source: '食谱缺料', status: '待补' });
           }
         });
-        closeModal(); STATE.appPage = 'restock'; renderApp();
-        toast(added ? ('已把 ' + added + ' 样食材加入补货清单') : '所需食材已在补货清单中');
+        closeModal(); STATE.appPage = 'cart'; renderApp();
+        toast('所需食材已加入购物车');
         return;
       }
       if (a === 'simulate-nfc') {
@@ -1993,6 +2046,24 @@
         if (STATE.cart[idx].qty <= 0) STATE.cart.splice(idx, 1);
         renderApp(); return;
       }
+      if (a === 'cart-select') {
+        const c = STATE.cart[+actionEl.dataset.idx];
+        if (c) c.selected = c.selected === false;
+        renderApp(); return;
+      }
+      if (a === 'cart-select-all') {
+        const allOn = STATE.cart.length > 0 && STATE.cart.every(c => c.selected !== false);
+        STATE.cart.forEach(c => { c.selected = !allOn; });
+        renderApp(); return;
+      }
+      if (a === 'restock-to-cart') {
+        const r = STATE.restock.find(x => x.id === actionEl.dataset.id);
+        const sku = r && skuByName(r.name);
+        if (!sku) { toast('这款暂时没有同款商品'); return; }
+        addToCart(sku, r.id); renderApp(); toast('已加入购物车'); return;
+      }
+      if (a === 'go-cart') { closeModal(); STATE.appPage = 'cart'; renderApp(); return; }
+      if (a === 'cart-manage') { toast('点商品左侧圆圈勾选，右下角结算'); return; }
     }
 
     const appRouteBtn = e.target.closest('[data-app-route]');
@@ -2010,11 +2081,13 @@
       const r = RECIPES.find(x => x.id === addMissingBtn.dataset.addMissing);
       let n = 0;
       r.ingredients.filter(x => !x.have).forEach(ing => {
-        if (!STATE.restock.some(rs => rs.name === ing.name)) {
+        const sku = skuByName(ing.name);
+        if (sku) addToCart(sku, null);
+        else if (!STATE.restock.some(rs => rs.name === ing.name)) {
           STATE.restock.push({ id: 'rs-' + Date.now() + '-' + (n++), name: ing.name, suggestQty: 1, unit: '份', source: '食谱缺料', status: '待补' });
         }
       });
-      renderApp(); toast('已把缺失食材加入补货清单'); return;
+      STATE.appPage = 'cart'; renderApp(); toast('缺失食材已加入购物车'); return;
     }
     const productLine = e.target.closest('[data-product]');
     if (productLine) { STATE.productSku = productLine.dataset.product; STATE.appPage = 'product'; renderApp(); return; }
@@ -2026,9 +2099,19 @@
     STATE.cart = []; STATE.checked = new Set(); STATE.device = { ...DEVICE };
     STATE.appPage = 'home'; STATE.expiryDay = 3; STATE.aiDish = null;
     STATE.fridgeModel = 'standard'; STATE.autoRestockAsked = false; STATE.focusLayer = null;
+    STATE.restock.filter(r => r.status === '待补').forEach(r => {
+      const sku = skuByName(r.name);
+      if (sku) addToCart(sku, r.id);
+    });
     renderApp(); toast('已恢复初始数据');
   });
 
+  if (!STATE.cart.length) {
+    STATE.restock.filter(r => r.status === '待补').forEach(r => {
+      const sku = skuByName(r.name);
+      if (sku) addToCart(sku, r.id);
+    });
+  }
   renderApp();
   // 页面加载时序：开场动画 → 新手教程 → 临期食材提醒（每次刷新都重播）
   initExperienceSequence();

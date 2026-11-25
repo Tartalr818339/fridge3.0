@@ -159,7 +159,19 @@ const PRODUCT_MAPPING = {
   'SKU-NOODLE-2': '面条',
   'SKU-LEMON-3': '柠檬',
   'SKU-YOGURT-4': '原味酸奶',
-  'SKU-SALMON-1': '三文鱼'
+  'SKU-SALMON-1': '三文鱼',
+  'SKU-TOMATO-4': '番茄',
+  'SKU-BEEF-500': '牛腩',
+  'SKU-TOFU-2': '豆腐',
+  'SKU-BROCCOLI-1': '西兰花',
+  'SKU-CHICKEN-500': '鸡胸肉',
+  'SKU-CHEESE-1': '奶酪',
+  'SKU-BREAD-1': '吐司面包',
+  'SKU-BLUEBERRY-1': '蓝莓',
+  'SKU-APPLE-5': '红苹果',
+  'SKU-WINGS-500': '鸡翅',
+  'SKU-GARLIC-1': '大蒜',
+  'SKU-ONION-3': '洋葱'
 };
 
 const PRODUCTS = [
@@ -168,7 +180,19 @@ const PRODUCTS = [
   { sku: 'SKU-NOODLE-2', name: '手擀面条 2 包', emoji: '🍜', price: 9.9 },
   { sku: 'SKU-LEMON-3', name: '新鲜柠檬 3 个', emoji: '🍋', price: 8.8 },
   { sku: 'SKU-YOGURT-4', name: '原味酸奶 4 杯', emoji: '🥣', price: 19.9 },
-  { sku: 'SKU-SALMON-1', name: '挪威三文鱼 1 块', emoji: '🐟', price: 39.9 }
+  { sku: 'SKU-SALMON-1', name: '挪威三文鱼 1 块', emoji: '🐟', price: 39.9 },
+  { sku: 'SKU-TOMATO-4', name: '沙瓤番茄 4 个装', emoji: '🍅', price: 9.9 },
+  { sku: 'SKU-BEEF-500', name: '新鲜牛腩 500g', emoji: '🥩', price: 45.9 },
+  { sku: 'SKU-TOFU-2', name: '嫩豆腐 2 盒装', emoji: '🧈', price: 6.9 },
+  { sku: 'SKU-BROCCOLI-1', name: '有机西兰花 1 颗', emoji: '🥦', price: 5.9 },
+  { sku: 'SKU-CHICKEN-500', name: '去皮鸡胸肉 500g', emoji: '🍗', price: 18.9 },
+  { sku: 'SKU-CHEESE-1', name: '马苏里拉奶酪 1 袋', emoji: '🧀', price: 22.9 },
+  { sku: 'SKU-BREAD-1', name: '全麦吐司面包 1 袋', emoji: '🍞', price: 8.9 },
+  { sku: 'SKU-BLUEBERRY-1', name: '云南蓝莓 1 盒', emoji: '🫐', price: 16.9 },
+  { sku: 'SKU-APPLE-5', name: '红苹果 5 个装', emoji: '🍎', price: 12.9 },
+  { sku: 'SKU-WINGS-500', name: '鲜鸡翅 500g', emoji: '🍗', price: 26.9 },
+  { sku: 'SKU-GARLIC-1', name: '紫皮大蒜 1 袋', emoji: '🧄', price: 3.9 },
+  { sku: 'SKU-ONION-3', name: '黄皮洋葱 3 个', emoji: '🧅', price: 4.9 }
 ];
 
 // 下单入库预置：SKU → 放入层 / 数量 / 单位 / 保质天数 / 新鲜度条
@@ -179,7 +203,19 @@ const PURCHASE_PRESETS = {
   'SKU-NOODLE-2': { layer: '冷藏室上层', qty: 2, unit: '包', shelfDays: 30, freshPct: 100, icon: '🍜' },
   'SKU-LEMON-3':  { layer: '果蔬抽屉',   qty: 3, unit: '个', shelfDays: 12, freshPct: 100, icon: '🍋' },
   'SKU-YOGURT-4': { layer: '冷藏室上层', qty: 4, unit: '杯', shelfDays: 7,  freshPct: 100, icon: '🥣' },
-  'SKU-SALMON-1': { layer: '冷藏室下层', qty: 1, unit: '块', shelfDays: 4,  freshPct: 100, icon: '🐟' }
+  'SKU-SALMON-1': { layer: '冷藏室下层', qty: 1, unit: '块', shelfDays: 4,  freshPct: 100, icon: '🐟' },
+  'SKU-TOMATO-4': { layer: '果蔬抽屉', qty: 4, unit: '个', shelfDays: 8, freshPct: 100, icon: '🍅' },
+  'SKU-BEEF-500': { layer: '冷藏室下层', qty: 1, unit: '袋', shelfDays: 3, freshPct: 100, icon: '🥩' },
+  'SKU-TOFU-2': { layer: '冷藏室下层', qty: 2, unit: '盒', shelfDays: 4, freshPct: 100, icon: '🧈' },
+  'SKU-BROCCOLI-1': { layer: '果蔬抽屉', qty: 1, unit: '颗', shelfDays: 6, freshPct: 100, icon: '🥦' },
+  'SKU-CHICKEN-500': { layer: '冷藏室下层', qty: 1, unit: '袋', shelfDays: 3, freshPct: 100, icon: '🍗' },
+  'SKU-CHEESE-1': { layer: '冷藏室上层', qty: 1, unit: '袋', shelfDays: 12, freshPct: 100, icon: '🧀' },
+  'SKU-BREAD-1': { layer: '冷藏室上层', qty: 1, unit: '袋', shelfDays: 7, freshPct: 100, icon: '🍞' },
+  'SKU-BLUEBERRY-1': { layer: '果蔬抽屉', qty: 1, unit: '盒', shelfDays: 5, freshPct: 100, icon: '🫐' },
+  'SKU-APPLE-5': { layer: '果蔬抽屉', qty: 5, unit: '个', shelfDays: 12, freshPct: 100, icon: '🍎' },
+  'SKU-WINGS-500': { layer: '冷藏室下层', qty: 1, unit: '袋', shelfDays: 3, freshPct: 100, icon: '🍗' },
+  'SKU-GARLIC-1': { layer: '果蔬抽屉', qty: 1, unit: '袋', shelfDays: 20, freshPct: 100, icon: '🧄' },
+  'SKU-ONION-3': { layer: '果蔬抽屉', qty: 3, unit: '个', shelfDays: 14, freshPct: 100, icon: '🧅' }
 };
 
 // 根据下单 SKU 生成一条新入库食材

@@ -300,7 +300,9 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .ai-need-chip{font-size:13px;font-weight:600;padding:5px 9px;border-radius:8px;background:#F1F3F2;color:var(--ink-2)}
 .ai-none{font-size:13px;color:var(--muted)}
 .ai-summary{font-size:13px;color:var(--green-deep);font-weight:700;background:var(--green-soft);border-radius:10px;padding:9px 11px;text-align:center;margin-bottom:12px}
-.ai-actions{display:flex;gap:8px}
+.ai-actions{display:flex;flex-direction:column;gap:8px}
+.ai-actions .btn{width:100%;min-width:0;white-space:normal;text-align:center}
+.ai-result > .btn.btn-block{width:100%;margin-top:8px}
 .ai-change{display:block;margin:12px auto 0;border:0;background:none;color:var(--green-deep);font-size:13px;font-weight:700;min-height:34px;padding:4px 12px}
 /* 下单成功弹窗 */
 .checkout-modal{max-width:400px}
@@ -378,6 +380,35 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .cart-inline{font-size:13px;color:var(--green-deep);background:var(--green-soft);padding:3px 7px;border-radius:6px;margin-top:3px;display:inline-block}
 .qty-ctrl{display:flex;align-items:center;gap:8px}
 .qty-ctrl button{width:30px;height:30px;border-radius:7px;background:#F0F4F1;font-weight:700;font-size:13px}
+/* 淘宝式购物车 */
+.cart-page{padding-bottom:78px}
+.cart-page-title{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.cart-page-title h2{font-size:21px}
+.cart-page-title h2 span{font-size:14px;color:var(--muted);font-weight:500}
+.cart-page-title .mini-btn{margin-left:auto}
+.cart-promos{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.cart-promos span{font-size:12px;color:#C2410C;background:#FFF1E7;border-radius:6px;padding:4px 8px}
+.cart-store-head{display:flex;align-items:center;gap:8px;background:#fff;border-radius:13px 13px 0 0;border:1px solid var(--line);padding:10px 12px;font-size:13px;font-weight:600}
+.cart-store-head b{margin-left:auto;font-size:13px;color:var(--green-deep)}
+.cart-item{display:flex;align-items:flex-start;gap:10px;background:#fff;border:1px solid var(--line);border-top:0;padding:11px 12px;margin-bottom:9px}
+.cart-thumb{width:64px;height:64px;flex:none;border-radius:10px;background:var(--green-soft);display:grid;place-items:center}
+.cart-thumb .food-ico{width:38px;height:38px}
+.cart-item-main{flex:1;min-width:0}
+.cart-item-title{font-size:14px;font-weight:600;line-height:1.35}
+.cart-tags{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
+.cart-tags span{font-size:11px;color:#C2410C;background:#FFF1E7;border-radius:4px;padding:2px 5px}
+.cart-item-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:9px}
+.cart-price{font-size:16px;color:#E4393C;font-weight:800}
+.cart-empty{text-align:center;color:var(--muted);font-size:13px;padding:36px 12px;background:#fff;border-radius:13px;border:1px solid var(--line)}
+.cart-recommend{background:#fff;border:1px solid var(--line);border-radius:13px;padding:12px;margin-bottom:12px}
+.cart-recommend h4{font-size:14px;margin-bottom:9px}
+.cart-recommend h4 span{font-size:12px;color:var(--muted);font-weight:400;margin-left:6px}
+.cart-recommend-list{display:flex;gap:7px;flex-wrap:wrap}
+.cart-checkout-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(70px + env(safe-area-inset-bottom,0px));width:min(390px,calc(100% - 24px));z-index:9;display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:9px 11px;box-shadow:0 -4px 18px rgba(18,61,40,.08)}
+.cart-checkout-bar .btn{margin-left:auto;min-width:104px}
+.cart-total{text-align:right;margin-left:auto;line-height:1.2}
+.cart-total small{display:block;font-size:11px;color:var(--muted)}
+.cart-total b{font-size:16px;color:#E4393C}
 
 /* 设备 */
 .device-card{background:linear-gradient(135deg,#DCE9E0,#EBF3ED);color:var(--ink);border:1px solid #C9DDCF;border-radius:18px;padding:16px;margin-bottom:12px;position:relative;overflow:hidden}
