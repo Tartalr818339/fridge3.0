@@ -494,7 +494,7 @@
           </div>
         </div>`).join('')}
       ` : `<div class="cart-empty">购物车还是空的，去「今日食谱」看看要补什么</div>`}
-      ${recommendations.length ? `<div class="cart-recommend"><h4>推荐补货 <span>点一下加入购物车</span></h4><div class="cart-recommend-list">${recommendations.map(r => `<button class="chip" data-action="restock-to-cart" data-id="${r.id}">${skuByName(r.name) ? '＋' : '·'} ${esc(r.name)}</button>`).join('')}</div></div>` : ''}
+      ${recommendations.length ? `<div class="cart-recommend"><h4>推荐补货 <span>点一下加入购物车</span></h4><div class="cart-recommend-list">${recommendations.map(r => `<button class="chip" data-action="restock-to-cart" data-id="${r.id}">＋ ${esc(r.name)}</button>`).join('')}</div></div>` : ''}
     </div>`;
   }
 
@@ -690,7 +690,18 @@
     const synced = [];
     const filled = [];
     chosen.forEach(c => {
-      const newItem = purchaseToItem(c.sku);
+      let newItem = purchaseToItem(c.sku);
+      if (!newItem) {
+        const days = 7;
+        const exp = new Date(TODAY); exp.setDate(exp.getDate() + days);
+        const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        newItem = {
+          id: 'it-' + Date.now() + '-' + c.name, name: c.name, icon: foodIcon(c.name, '🥬'),
+          layer: defaultLayerForFood(c.name), purchaseDate: TODAY, expiryDate: iso(exp),
+          remainingDays: days, freshness: 'green', freshPct: 90,
+          quantity: c.qty, unit: '份', source: '食谱补货'
+        };
+      }
       if (!newItem) return;
       const existing = ITEMS.find(i => i.name === newItem.name);
       if (existing) {
@@ -1617,12 +1628,13 @@
     }
   }
 
-  function addToCart(sku, rid) {
+  function addToCart(sku, rid, fallbackName) {
     const p = PRODUCTS.find(x => x.sku === sku);
-    if (!p) return;
-    const exist = STATE.cart.find(c => c.sku === sku);
+    const name = p ? p.name : (fallbackName || sku);
+    if (!name) return;
+    const exist = STATE.cart.find(c => c.sku === sku && sku) || STATE.cart.find(c => !c.sku && c.name === name);
     if (exist) exist.qty += 1;
-    else STATE.cart.push({ sku, name: p.name, qty: 1, fromRestockId: rid || null });
+    else STATE.cart.push({ sku: sku || '', name, qty: 1, fromRestockId: rid || null });
     if (rid) {
       const r = STATE.restock.find(x => x.id === rid);
       if (r) r.status = '已加购';
@@ -2052,10 +2064,7 @@
         const name = actionEl.dataset.name;
         if (!name) return;
         const sku = skuByName(name);
-        if (sku) addToCart(sku, null);
-        else if (!STATE.restock.some(rs => rs.name === name)) {
-          STATE.restock.push({ id: 'rs-' + Date.now(), name, suggestQty: 1, unit: '份', source: '食谱缺料', status: '待补' });
-        }
+        addToCart(sku || null, null, name);
         actionEl.classList.add('added');
         actionEl.dataset.added = '1';
         actionEl.innerHTML = '✓ ' + esc(name);
@@ -2065,14 +2074,7 @@
       if (a === 'ai-add-restock') {
         const r = STATE.aiDish || RECIPES.find(x => x.id === actionEl.dataset.recipe);
         const { need } = aiAnalyzeRecipe(r);
-        let added = 0;
-        need.forEach(n => {
-          const sku = skuByName(n);
-          if (sku) addToCart(sku, null);
-          else if (!STATE.restock.some(rs => rs.name === n)) {
-            STATE.restock.push({ id: 'rs-' + Date.now() + '-' + (added++), name: n, suggestQty: 1, unit: '份', source: '食谱缺料', status: '待补' });
-          }
-        });
+        need.forEach(n => { const sku = skuByName(n); addToCart(sku || null, null, n); });
         closeModal(); STATE.appPage = 'cart'; renderApp();
         toast('所需食材已加入购物车');
         return;
@@ -2148,16 +2150,16 @@
       }
       if (a === 'restock-to-cart') {
         const r = STATE.restock.find(x => x.id === actionEl.dataset.id);
-        const sku = r && skuByName(r.name);
-        if (!sku) { toast('这款暂时没有同款商品'); return; }
-        addToCart(sku, r.id); renderApp(); toast('已加入购物车'); return;
+        if (!r) return;
+        const sku = skuByName(r.name);
+        addToCart(sku || null, r.id, r.name); renderApp(); toast('已加入购物车'); return;
       }
       if (a === 'go-cart') {
         const addedNames = new Set($$('.ai-need-chip[data-added="1"]').map(el => el.dataset.name));
         const r = STATE.aiDish;
         if (r) {
           const { need } = aiAnalyzeRecipe(r);
-          need.filter(n => !addedNames.has(n)).forEach(n => { const sku = skuByName(n); if (sku) addToCart(sku, null); });
+          need.filter(n => !addedNames.has(n)).forEach(n => { const sku = skuByName(n); addToCart(sku || null, null, n); });
         }
         closeModal(); STATE.appPage = 'cart'; renderApp(); toast('所需食材已加入购物车'); return;
       }
@@ -2187,13 +2189,9 @@
     const addMissingBtn = e.target.closest('[data-add-missing]');
     if (addMissingBtn) {
       const r = RECIPES.find(x => x.id === addMissingBtn.dataset.addMissing);
-      let n = 0;
       r.ingredients.filter(x => !x.have).forEach(ing => {
         const sku = skuByName(ing.name);
-        if (sku) addToCart(sku, null);
-        else if (!STATE.restock.some(rs => rs.name === ing.name)) {
-          STATE.restock.push({ id: 'rs-' + Date.now() + '-' + (n++), name: ing.name, suggestQty: 1, unit: '份', source: '食谱缺料', status: '待补' });
-        }
+        addToCart(sku || null, null, ing.name);
       });
       STATE.appPage = 'cart'; renderApp(); toast('缺失食材已加入购物车'); return;
     }
