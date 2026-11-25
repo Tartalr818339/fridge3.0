@@ -556,7 +556,7 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .tour-root.closing{animation:fadeOut .24s ease both}
 .tour-active #modal-root,.tour-active #toast-root,.tour-active #dock-root,.tour-active .cart-top-alert,.tour-active .help-fab{display:none!important}
 @keyframes fadeOut{from{opacity:1}to{opacity:0}}
-.tour-spotlight{position:fixed;z-index:111;opacity:0;border:2px solid rgba(255,255,255,.96);border-radius:20px;box-shadow:0 0 0 9999px rgba(10,26,17,.58),0 8px 30px rgba(0,0,0,.18);pointer-events:auto;cursor:pointer;transition:left .38s cubic-bezier(.2,.8,.2,1),top .38s cubic-bezier(.2,.8,.2,1),width .38s cubic-bezier(.2,.8,.2,1),height .38s cubic-bezier(.2,.8,.2,1),opacity .2s ease}
+.tour-spotlight{position:fixed;z-index:111;opacity:0;border:2px solid rgba(255,255,255,.96);border-radius:20px;box-shadow:0 0 0 9999px rgba(10,26,17,.58),0 8px 30px rgba(0,0,0,.18);pointer-events:auto;cursor:pointer;transition:opacity .2s ease}
 .tour-card{position:fixed;z-index:112;background:#fff;border-radius:18px;padding:18px 18px 16px;box-shadow:0 24px 60px rgba(0,0,0,.28);transition:left .38s cubic-bezier(.2,.8,.2,1),top .38s cubic-bezier(.2,.8,.2,1),width .38s cubic-bezier(.2,.8,.2,1),opacity .2s ease}
 .tour-card.waiting{opacity:0;pointer-events:none}
 .tour-card.step-in{animation:tourCardIn .28s ease both}
@@ -606,6 +606,30 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .intro-root.brand-in .intro-brand{opacity:1;transform:none}
 .intro-brand h1{font-size:40px;color:var(--green-deep);letter-spacing:.14em;text-indent:.14em}
 .intro-brand p{font-size:14px;color:#456A52;margin-top:8px;letter-spacing:.16em;text-indent:.16em}
+
+/* ============ 与冰箱显示屏同款的写实图标 / 真实菜谱图 ============ */
+.food-ico{width:20px;height:20px;display:inline-block;vertical-align:-.3em;flex:none}
+.tab .tab-ico svg{width:22px;height:22px;display:block}
+.modal-icon .food-ico{width:28px;height:28px;vertical-align:middle}
+.rc-icon .food-ico{width:24px;height:24px;vertical-align:middle}
+.db-ico .food-ico{width:18px;height:18px;vertical-align:middle}
+.mac-ico .food-ico{width:28px;height:28px}
+.fv-ico .food-ico{width:22px;height:22px}
+.al-emoji .food-ico,.fd-emoji .food-ico,.ck-emoji .food-ico,.de-emoji .food-ico{width:26px;height:26px;vertical-align:middle}
+.em-ico .food-ico{width:20px;height:20px;vertical-align:-.35em}
+.expiry-mini-row .em-ico .food-ico{width:16px;height:16px}
+.ai-have-chip .food-ico{width:16px;height:16px;vertical-align:-.25em}
+.r-emoji .food-ico,.cr-emoji .food-ico{width:22px;height:22px;vertical-align:middle}
+.mini-line .food-ico{width:16px;height:16px;vertical-align:-.25em}
+.ai-dish-emoji .food-ico{width:32px;height:32px}
+.ac-orb .food-ico{width:26px;height:26px}
+.mic-btn .food-ico{width:20px;height:20px;vertical-align:middle}
+.aq-btn .food-ico,.add-tab .food-ico,.model-photo .food-ico{width:18px;height:18px;vertical-align:-3px;margin-right:4px}
+.hr-emoji{overflow:hidden;padding:0}
+.hr-emoji img{width:100%;height:100%;object-fit:cover;display:block}
+.recipe-thumb{width:56px;height:56px;border-radius:14px;overflow:hidden;flex:none;background:var(--green-soft)}
+.recipe-thumb img{width:100%;height:100%;object-fit:cover;object-position:center 35%;display:block;transform:scale(1.12)}
+.rb-photo{position:absolute;right:14px;top:12px;width:88px;height:88px;border-radius:14px;object-fit:cover;object-position:center 35%;box-shadow:0 6px 18px rgba(0,0,0,.22);opacity:.95}
 
 /* ============ 响应式：真机全屏 ============ */
 @media(max-width:520px){

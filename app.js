@@ -6,8 +6,13 @@
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+  // 与冰箱显示屏共用同一套写实 SVG 图标
+  const foodIcon = (name, fallback) => window.foodIcon(name, fallback);
+  const dishIcon = (emoji) => window.emojiIcon(emoji);
+
   // 内联 SVG 图标（避免部分设备上 emoji 渲染成方框）
   const svg = (paths, size) => `<svg width="${size || 20}" height="${size || 20}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+  const navIcon = path => `<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true">${path}</svg>`;
   const ICON = {
     x: svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>', 20),
     home: svg('<path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>', 22),
@@ -30,12 +35,9 @@
   const scrollCue = $('#scroll-cue');
   const dockRoot = $('#dock-root');
 
-  // 分区图标用 SVG，避免 emoji 在某些设备渲染成方框
+  // 分区图标与冰箱显示屏保持一致
   function layerIcon(layer) {
-    if (layer.includes('冷冻')) return ICON.snow;
-    if (layer === '果蔬抽屉') return ICON.leaf;
-    if (layer === '冷藏室下层') return ICON.box;
-    return ICON.fridge;
+    return window.layerIcon(layer);
   }
   function currentLayers() {
     const m = FRIDGE_MODELS.find(x => x.key === STATE.fridgeModel) || FRIDGE_MODELS[0];
@@ -98,10 +100,10 @@
   /* ==================== 手机 App ==================== */
   // 底部导航只放四个独立入口；冰箱食材是首页分区的下钻页面，不单列 Tab
   const TABS = [
-    { key: 'home', icon: ICON.home, label: '首页' },
-    { key: 'recipes', icon: ICON.book, label: '食谱' },
-    { key: 'restock', icon: ICON.cart, label: '补货' },
-    { key: 'device', icon: ICON.gear, label: '我的' }
+    { key: 'home', icon: navIcon('<path d="M12 2 2 11h3v10h6v-6h2v6h6V11h3L12 2z"/>'), label: '首页' },
+    { key: 'recipes', icon: navIcon('<path d="M3 11h18a1 1 0 0 1 1 1c0 4.4-4.5 8-10 8S2 16.4 2 12a1 1 0 0 1 1-1zm5-8h2v7H8V3zm4 0h2v7h-2V3z"/>'), label: '食谱' },
+    { key: 'restock', icon: navIcon('<path d="M2 3h2.6l1 3.5h14.1l-2.3 8.5H7.2L6.5 18h11.8v2H5.2a2 2 0 0 1-2-2L2 3zm4.5 17a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm9.5 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>'), label: '补货' },
+    { key: 'device', icon: navIcon('<path d="M19.4 13a7.8 7.8 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.6 7.6 0 0 0-1.7-1L15 3.5h-4l-.4 2.4a7.6 7.6 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.8 7.8 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.6 7.6 0 0 0 1.7 1l.4 2.4h4l.4-2.4a7.6 7.6 0 0 0 1.7-1l2.5 1 2-3.5L19.4 13zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/>'), label: '我的' }
   ];
   const PAGE_TITLES = {
     home: '鲜知', fridge: '我的冰箱', recipes: '今日食谱', recipe: '菜谱详情',
@@ -255,14 +257,14 @@
       <div class="result-card">
         <div class="result-card-head"><div class="rc-icon">📋</div><div><h4>补货清单</h4><p>${pending.length} 项待补货</p></div></div>
         <div class="result-card-body">
-          ${pending.slice(0,3).map(r => `<div class="mini-line"><span>${r.source === '快到期提醒' ? '⏰' : '📝'}</span><span class="ml-name">${esc(r.name)} ×${r.suggestQty}${esc(r.unit)}</span><span class="muted">${sourceLabel(r.source)}</span></div>`).join('')}
+          ${pending.slice(0,3).map(r => `<div class="mini-line"><span>${r.source === '快到期提醒' ? '⏰' : '📝'}</span><span class="ml-name">${foodIcon(r.name)} ${esc(r.name)} ×${r.suggestQty}${esc(r.unit)}</span><span class="muted">${sourceLabel(r.source)}</span></div>`).join('')}
           <button class="btn btn-primary btn-block" data-go="restock" style="margin-top:10px">查看完整清单</button>
         </div>
       </div>
       <div class="result-card">
-        <div class="result-card-head"><div class="rc-icon" style="background:var(--yellow-soft)">🍳</div><div><h4>今日食谱推荐</h4><p>先用掉快到期的食材</p></div></div>
+        <div class="result-card-head"><div class="rc-icon" style="background:var(--yellow-soft)">${dishIcon('🍳')}</div><div><h4>今日食谱推荐</h4><p>先用掉快到期的食材</p></div></div>
         <div class="result-card-body">
-          ${RECIPES.slice(0,2).map(r => `<button class="mini-line" data-recipe="${r.id}" style="width:100%;text-align:left"><span>${r.emoji}</span><span class="ml-name">${esc(r.name)} · ${r.minutes} 分钟</span><span style="color:var(--green-deep);font-size:13px">${r.expiring.length ? '快到期优先' : '查看'}</span></button>`).join('')}
+          ${RECIPES.slice(0,2).map(r => `<button class="mini-line" data-recipe="${r.id}" style="width:100%;text-align:left"><span>${dishIcon(r.emoji)}</span><span class="ml-name">${esc(r.name)} · ${r.minutes} 分钟</span><span style="color:var(--green-deep);font-size:13px">${r.expiring.length ? '快到期优先' : '查看'}</span></button>`).join('')}
         </div>
       </div>`;
   }
@@ -274,7 +276,7 @@
       { title: '冷冻区', hint: '-18℃ · 长期保存', layers: layers.filter(l => l.includes('冷冻')) }
     ];
     return `<div class="model-action-card" id="fridge-model-card">
-        <div class="mac-ico">${ICON.fridge}</div>
+        <div class="mac-ico">${dishIcon('🧊')}</div>
         <div class="mac-info">
           <div class="mac-title-row"><h4>${esc(currentModel().name)}</h4><span class="mac-sub">${layers.length} 分区</span></div>
           <p>选择和你家一致的冰箱结构，管理更精准</p>
@@ -333,7 +335,7 @@
         </div>
         <div class="al-list">
           ${items.map(i => `<div class="al-row ${i.freshness}">
-            <span class="al-emoji">${i.icon}</span>
+            <span class="al-emoji">${foodIcon(i.name, i.icon)}</span>
             <div class="al-info">
               <div class="al-name">${esc(i.name)} <span class="pill-tag ${i.freshness}">${i.remainingDays === 0 ? '已过期' : '还剩 ' + i.remainingDays + ' 天'}</span>${priorityTag(i)}</div>
               <div class="al-meta">保质至 ${esc(i.expiryDate)} · ${i.quantity}${esc(i.unit)}</div>
@@ -360,7 +362,7 @@
           </div>
           <div class="expiry-list-mini">
             ${shown.length ? shown.map(i => `<div class="expiry-mini-row">
-              <span class="em-ico">${i.icon}</span><span class="em-name">${esc(i.name)}</span>
+              <span class="em-ico">${foodIcon(i.name, i.icon)}</span><span class="em-name">${esc(i.name)}</span>
               <span class="em-meta">${i.remainingDays === 0 ? '已过期' : '还剩 ' + i.remainingDays + ' 天'} · ${i.quantity}${esc(i.unit)}</span>${priorityTag(i)}
             </div>`).join('') : '<div class="expiry-none">这个范围内没有快到期的食材</div>'}
             ${dayItems.length > 4 ? `<button class="expiry-more" data-action="expiry-all">查看全部 ${dayItems.length} 件 ›</button>` : ''}
@@ -377,7 +379,7 @@
   function homeRecipeModule() {
     return `<div class="sec-title">今日食谱 <button class="more" data-go="recipes">全部食谱 ›</button></div>
       <div class="home-recipe-list">${RECIPES.slice(0, 3).map(r => `<button class="home-recipe" data-recipe="${r.id}">
-        <span class="hr-emoji" style="background:${r.thumb}">${r.emoji}</span>
+        <span class="hr-emoji"><img src="${r.image}" alt="" loading="lazy" /></span>
         <span class="grow"><b>${esc(r.name)}</b><small>⏱ ${r.minutes} 分钟 · ${r.ingredients.filter(x => x.have).length}/${r.ingredients.length} 食材已有</small></span>
         <span class="hr-go">›</span>
       </button>`).join('')}</div>`;
@@ -411,7 +413,7 @@
         <div class="fd-layer-head"><h4>${layerIcon(layer)} ${esc(layer)}</h4><span class="fd-temp">${meta.temp} · ${its.length} 件</span></div>
         <div class="fd-list">
           ${its.map(i => `<div class="fd-item ${i.freshness}">
-            <span class="fd-emoji">${i.icon}</span>
+            <span class="fd-emoji">${foodIcon(i.name, i.icon)}</span>
             <div class="fd-info">
               <div class="fd-name">${esc(i.name)} <span class="pill-tag ${i.freshness}">${i.remainingDays === 0 ? '已过期' : FRESHNESS[i.freshness].label}</span>${priorityTag(i)}</div>
               <div class="fd-meta">保质至 ${esc(i.expiryDate)} · ${i.quantity}${esc(i.unit)}</div>
@@ -444,7 +446,7 @@
       <div class="sec-title">全部食谱 <span class="more">共 ${RECIPES.length} 道</span></div>
       ${RECIPES.map(r => `<button class="result-card" data-recipe="${r.id}" style="width:100%;text-align:left">
         <div style="display:flex;gap:12px;padding:12px;align-items:center">
-          <div style="width:56px;height:56px;border-radius:14px;background:${r.thumb};display:grid;place-items:center;font-size:28px">${r.emoji}</div>
+          <div class="recipe-thumb"><img src="${r.image}" alt="" loading="lazy" /></div>
           <div class="grow"><div style="font-size:13px;font-weight:700">${esc(r.name)}</div>
             <div class="muted" style="margin-top:3px">⏱ ${r.minutes} 分钟 · ${r.ingredients.filter(x=>x.have).length}/${r.ingredients.length} 食材已有</div>
             ${r.expiring.length ? `<span class="pill-tag yellow" style="margin-top:5px;display:inline-block">能用掉快到期食材：${r.expiring.map(esc).join('、')}</span>` : ''}
@@ -456,7 +458,7 @@
   function pageRecipe() {
     const r = RECIPES.find(x => x.id === STATE.recipeId) || RECIPES[0];
     return `<button class="back-link" data-go="recipes">‹ 返回食谱列表</button>
-      <div class="recipe-banner" style="background:${r.thumb}"><span class="rb-emoji">${r.emoji}</span><h2>${esc(r.name)}</h2><p>⏱ ${r.minutes} 分钟 · 5 星好评</p></div>
+      <div class="recipe-banner" style="background:${r.thumb}"><img class="rb-photo" src="${r.image}" alt="" /><h2>${esc(r.name)}</h2><p>⏱ ${r.minutes} 分钟 · 5 星好评</p></div>
       ${r.expiring.length ? `<div class="expiring-tip">⏰ <span>用得快到期的食材：<b>${r.expiring.map(esc).join('、')}</b>，今天做正合适</span></div>` : ''}
       <div class="sec-title">所需食材 <span class="more">标注「已有 / 需补充」</span></div>
       <div class="card">${r.ingredients.map(ing => `<div class="ing-item">
@@ -512,7 +514,7 @@
       <div class="product-title">${esc(p.name)}</div>
       <div class="price">¥${p.price.toFixed(2)}</div>
       ${dup && dup.hit ? `<div class="dup-banner">
-          <span class="db-ico">🥬</span><div><h4>冰箱里还有这个食材</h4>
+          <span class="db-ico">${dishIcon('🥬')}</span><div><h4>冰箱里还有这个食材</h4>
           <p>还有 ${dup.item.quantity}${esc(dup.item.unit)}，保质期至 ${esc(dup.item.expiryDate)}，暂时不用买。</p></div>
         </div>` : dup && dup.guideRestock ? `<div class="expiring-tip">⏰ ${esc(dup.name)} 快吃完了，可以补货了</div>` : ''}
       <div class="card" style="margin-bottom:12px">
@@ -558,8 +560,8 @@
   }
 
   function emojiFor(name) {
-    const map = { '鲜鸡蛋': '🥚', '全脂牛奶': '🥛', '面条': '🍜', '柠檬': '🍋', '原味酸奶': '🥣', '三文鱼': '🐟' };
-    return map[name] || '🛒';
+    const prod = PRODUCTS.find(p => p.name === name);
+    return foodIcon(name, prod && prod.emoji);
   }
   function sourceLabel(s) {
     return ({ '临期自动': '快到期提醒', '手动录入': '手动添加', '手动': '手动添加',
@@ -579,7 +581,7 @@
     modalRoot.innerHTML = `<div class="modal-overlay" data-action="close-modal">
       <div class="modal-card" data-stop="1">
         <div class="modal-head">
-          <div class="modal-icon">🥬</div>
+          <div class="modal-icon">${dishIcon('🥬')}</div>
           <div><h3>冰箱里还有这个食材</h3><p>先看看再决定，不用着急买</p></div>
         </div>
         <div class="dup-detail">
@@ -612,7 +614,7 @@
         </div>
         <div class="al-list">
           ${items.map(i => `<div class="al-row ${i.freshness}">
-            <span class="al-emoji">${i.icon}</span>
+            <span class="al-emoji">${foodIcon(i.name, i.icon)}</span>
             <div class="al-info">
               <div class="al-name">${esc(i.name)} <span class="pill-tag ${i.freshness}">${i.remainingDays === 0 ? '已过期' : '还剩 ' + i.remainingDays + ' 天'}</span>${priorityTag(i)}</div>
               <div class="al-meta">保质至 ${esc(i.expiryDate)} · ${i.quantity}${esc(i.unit)}</div>
@@ -633,14 +635,14 @@
     modalRoot.innerHTML = `<div class="modal-overlay" data-action="close-modal">
       <div class="modal-card model-modal" data-stop="1">
         <div class="modal-head">
-          <div class="modal-icon">🧊</div>
+          <div class="modal-icon">${dishIcon('🧊')}</div>
           <div class="grow"><h3>我的冰箱型号</h3><p>分区按你家冰箱来，不再搞混冷藏和冷冻</p></div>
           <button class="al-close" data-action="close-app-layer" aria-label="关闭">${ICON.x}</button>
         </div>
         ${FRIDGE_MODELS.map(m => `<button class="model-option ${m.key === STATE.fridgeModel ? 'active' : ''}" data-action="choose-model" data-model="${m.key}">
           <span class="mo-name">${m.name}</span><span class="mo-layers">${m.layers.join(' / ')}</span>
         </button>`).join('')}
-        <label class="model-photo" for="model-photo">📷 拍照识别冰箱分区</label>
+        <label class="model-photo" for="model-photo">${dishIcon('📷')} 拍照识别冰箱分区</label>
         <input type="file" id="model-photo" accept="image/*" capture="environment" />
         <div class="ai-footnote" style="margin-top:8px">拍照后会自动匹配最接近的分区结构</div>
       </div>
@@ -674,7 +676,7 @@
     modalRoot.innerHTML = `<div class="modal-overlay" data-action="close-modal">
       <div class="modal-card" data-stop="1">
         <div class="modal-head">
-          <div class="modal-icon">🛒</div>
+          <div class="modal-icon">${dishIcon('🛒')}</div>
           <div class="grow"><h3>要顺手补货吗？</h3><p>这几样常买的可能快用完了</p></div>
           <button class="al-close" data-action="close-app-layer" aria-label="关闭">${ICON.x}</button>
         </div>
@@ -738,7 +740,7 @@
         </div>
         <div class="ck-list">
           ${synced.map(i => `<div class="ck-row">
-            <span class="ck-emoji">${i.icon}</span>
+            <span class="ck-emoji">${foodIcon(i.name, i.icon)}</span>
             <div class="grow"><div class="ck-name">${esc(i.name)} <span class="pill-tag green">已入库</span></div>
               <div class="ck-meta">${esc(i.layer)} · ${i.quantity}${esc(i.unit)} · 保质至 ${esc(i.expiryDate)}</div>
             </div>
@@ -873,7 +875,7 @@
     STATE.aiDish = recipe;
     const { have, need, expiringInRecipe } = aiAnalyzeRecipe(recipe);
     const chipHtml = have.length
-      ? have.map(i => `<span class="ai-have-chip ${i.freshness}">${i.icon} ${esc(i.name)} · 剩${i.remainingDays}天</span>`).join('')
+      ? have.map(i => `<span class="ai-have-chip ${i.freshness}">${foodIcon(i.name, i.icon)} ${esc(i.name)} · 剩${i.remainingDays}天</span>`).join('')
       : '<span class="ai-none">冰箱里没找到这道菜的明确用料</span>';
     const needHtml = need.length
       ? need.map(n => `<span class="ai-need-chip">＋ ${esc(n)}</span>`).join('')
@@ -891,7 +893,7 @@
           <div class="grow"><h3>按你想的来做</h3><p>${modeText}</p></div>
           <button class="al-close" data-action="close-ai" aria-label="关闭">${ICON.x}</button>
         </div>
-        <div class="ai-dish"><span class="ai-dish-emoji">${recipe.emoji}</span><div><h4>${esc(recipe.name)}</h4><p>⏱ ${recipe.minutes} 分钟 · ${recipe.steps.length} 步完成</p></div></div>
+        <div class="ai-dish"><span class="ai-dish-emoji">${dishIcon(recipe.emoji)}</span><div><h4>${esc(recipe.name)}</h4><p>⏱ ${recipe.minutes} 分钟 · ${recipe.steps.length} 步完成</p></div></div>
         ${expiringTip}${customTip}
         <div class="ai-sec"><h5>✅ 冰箱里能用上（${have.length}）</h5><div class="ai-chips-static">${chipHtml}</div></div>
         <div class="ai-sec"><h5>🛒 建议补货（${need.length}）</h5><div class="ai-chips-static">${needHtml}</div></div>
@@ -931,7 +933,7 @@
     modalRoot.innerHTML = `<div class="modal-overlay" data-action="close-modal">
       <div class="modal-card" data-stop="1">
         <div class="modal-head">
-          <div class="modal-icon">${r.emoji}</div>
+          <div class="modal-icon">${dishIcon(r.emoji)}</div>
           <div class="grow"><h3>${esc(r.name)}</h3><p>⏱ ${r.minutes} 分钟 · 家常做法</p></div>
           <button class="al-close" data-action="close-app-layer" aria-label="关闭">${ICON.x}</button>
         </div>
@@ -1065,7 +1067,7 @@
     return `<div class="text-add">
         <div class="ai-input-row">
           <input id="ai-food-input" class="ai-input" placeholder="例如：买了6个鸡蛋和2盒牛奶放冷藏" />
-          <button class="mic-btn" data-action="voice-text" aria-label="语音输入">🎤</button>
+          <button class="mic-btn" data-action="voice-text" aria-label="语音输入">${dishIcon('🎤')}</button>
           <button class="btn btn-primary" data-action="entry-parse">识别</button>
         </div>
         <div class="ai-chips">
@@ -1239,7 +1241,7 @@
   function addPanelHtml() {
     if (addMode === 'photo') {
       return `<div class="add-camera">
-          <label for="af-photos"><span class="ac-orb">📷</span><p>上传 1 张或多张食材照片，都能识别入库</p></label>
+          <label for="af-photos"><span class="ac-orb">${dishIcon('📷')}</span><p>上传 1 张或多张食材照片，都能识别入库</p></label>
           <input type="file" id="af-photos" accept="image/*" capture="environment" multiple />
         </div>
         <div class="add-preview" id="ap-preview"></div>`;
@@ -1249,11 +1251,11 @@
       const layers = currentLayers();
       const defaultLayer = layers[0];
       return `<div class="add-quick">
-          <button class="aq-btn" data-action="add-tab" data-mode="photo">📷 拍照识别</button>
-          <button class="aq-btn" data-action="add-tab" data-mode="text">💬 一句话录入</button>
+          <button class="aq-btn" data-action="add-tab" data-mode="photo">${dishIcon('📷')} 拍照识别</button>
+          <button class="aq-btn" data-action="add-tab" data-mode="text">${dishIcon('💬')} 一句话录入</button>
         </div>
         <div class="add-field"><label>食材名称</label>
-          <div class="input-with-mic"><input id="af-name" placeholder="如：鸡蛋、牛奶、西兰花" /><button class="mic-btn" data-action="voice-manual" aria-label="语音输入">🎤</button></div>
+          <div class="input-with-mic"><input id="af-name" placeholder="如：鸡蛋、牛奶、西兰花" /><button class="mic-btn" data-action="voice-manual" aria-label="语音输入">${dishIcon('🎤')}</button></div>
         </div>
         <div class="add-field"><label>所在层</label>
           <div class="layer-picker" id="af-layer" data-layer="${esc(defaultLayer)}">
@@ -1312,14 +1314,14 @@
     modalRoot.innerHTML = `<div class="modal-overlay" data-action="close-modal">
       <div class="modal-card" data-stop="1">
         <div class="modal-head">
-          <div class="modal-icon">${ICON.box}</div>
+          <div class="modal-icon">${dishIcon('🧺')}</div>
           <div class="grow"><h3>添加食材</h3><p id="add-subtitle">${addSubtitle()}</p></div>
           <button class="al-close" data-action="close-app-layer" aria-label="关闭">${ICON.x}</button>
         </div>
         <div class="add-tabs">
-          <button class="add-tab ${addMode==='manual'?'active':''}" data-action="add-tab" data-mode="manual">✍️ 手动<i>推荐</i></button>
-          <button class="add-tab ${addMode==='photo'?'active':''}" data-action="add-tab" data-mode="photo">📷 拍照</button>
-          <button class="add-tab ${addMode==='text'?'active':''}" data-action="add-tab" data-mode="text">💬 一句话</button>
+          <button class="add-tab ${addMode==='manual'?'active':''}" data-action="add-tab" data-mode="manual">${dishIcon('✍️')} 手动<i>推荐</i></button>
+          <button class="add-tab ${addMode==='photo'?'active':''}" data-action="add-tab" data-mode="photo">${dishIcon('📷')} 拍照</button>
+          <button class="add-tab ${addMode==='text'?'active':''}" data-action="add-tab" data-mode="text">${dishIcon('💬')} 一句话</button>
         </div>
         ${addMode === 'manual' ? `<div class="batch-toggle">
           <button class="batch-seg ${!addBatch?'active':''}" data-action="add-batch" data-batch="single">单件</button>
@@ -1514,7 +1516,7 @@
     const spotlight = tourRoot.querySelector('.tour-spotlight');
     spotlight.addEventListener('click', handleTourSpotlightClick);
     renderTourStep();
-    requestAnimationFrame(updateTourPosition);
+    requestAnimationFrame(syncTourSpotlight);
   }
 
   function showTourStepCard() {
@@ -1596,6 +1598,12 @@
     else finishTour();
   }
 
+  function syncTourSpotlight() {
+    if (!tourActive) return;
+    updateTourPosition();
+    requestAnimationFrame(syncTourSpotlight);
+  }
+
   function updateTourPosition() {
     const root = tourRoot;
     if (!root || !tourActive) return;
@@ -1669,7 +1677,7 @@
           ${items.map(i => {
             const urgent = i.remainingDays <= 1;
             return `<div class="daily-expiry-row ${urgent ? 'urgent' : ''}">
-              <span class="de-emoji">${i.icon}</span>
+              <span class="de-emoji">${foodIcon(i.name, i.icon)}</span>
               <div class="de-info">
                 <div class="de-name">${esc(i.name)}</div>
                 <div class="de-meta">${esc(i.quantity)}${esc(i.unit)} · ${remainingText(i)} ${priorityTag(i)}</div>
