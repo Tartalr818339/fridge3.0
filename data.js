@@ -67,27 +67,62 @@ const RESTOCK_ITEMS = [
 ];
 
 const RECIPES = [
-  { id: 'rc-01', name: '番茄炒蛋', emoji: '🍳', image: './assets/recipes/tomato-eggs.png?v=59', minutes: 15, thumb: 'linear-gradient(135deg,#FFB86B,#FF7A59)',
+  { id: 'rc-01', name: '番茄炒蛋', emoji: '🍳', image: './assets/recipes/tomato-eggs-web.jpg', minutes: 15, thumb: 'linear-gradient(135deg,#FFB86B,#FF7A59)',
     ingredients: [
       { name: '鲜鸡蛋', have: true }, { name: '番茄', have: true }, { name: '葱', have: false }
     ],
     expiring: ['番茄'],
-    steps: ['番茄切块、鸡蛋打散备用。', '热油炒蛋至凝固盛出。', '下番茄炒出汁，回锅鸡蛋调味即成。'],
-    video: { title: '小高姐番茄炒蛋技巧', url: 'https://www.bilibili.com/video/BV1PW411T7YB', source: '哔哩哔哩' } },
-  { id: 'rc-02', name: '香煎三文鱼', emoji: '🐟', image: './assets/recipes/salmon.png?v=59', minutes: 20, thumb: 'linear-gradient(135deg,#FF9A8B,#FF6A88)',
+    video: { url: 'https://www.bilibili.com/video/BV1MfpwzcEKA', title: '番茄炒蛋，记住一个关键点，怎么炒都好吃', author: 'Fish吃了没' },
+    steps: ['番茄切块、鸡蛋打散备用。', '热油炒蛋至凝固盛出。', '下番茄炒出汁，回锅鸡蛋调味即成。'] },
+  { id: 'rc-02', name: '香煎三文鱼', emoji: '🐟', image: './assets/recipes/salmon-web.jpg', minutes: 20, thumb: 'linear-gradient(135deg,#FF9A8B,#FF6A88)',
     ingredients: [
       { name: '三文鱼', have: true }, { name: '西兰花', have: true }, { name: '柠檬', have: false }
     ],
     expiring: ['三文鱼'],
-    steps: ['三文鱼撒盐腌制 10 分钟。', '西兰花焯水备用。', '两面煎至金黄，挤柠檬汁装盘。'],
-    video: { title: '一个技巧煎出酥脆香煎三文鱼', url: 'https://www.bilibili.com/video/BV1oS421R7T5', source: '哔哩哔哩' } },
-  { id: 'rc-03', name: '豆腐蔬菜汤', emoji: '🍲', image: './assets/recipes/tofu-soup.png?v=59', minutes: 12, thumb: 'linear-gradient(135deg,#A8E063,#56AB2F)',
+    video: { url: 'https://www.bilibili.com/video/BV1oS421R7T5', title: '一个技巧就能煎出餐厅里酥脆的三文鱼', author: 'Hey-Jrake' },
+    steps: ['三文鱼撒盐腌制 10 分钟。', '西兰花焯水备用。', '两面煎至金黄，挤柠檬汁装盘。'] },
+  { id: 'rc-03', name: '豆腐蔬菜汤', emoji: '🍲', image: './assets/recipes/tofu-soup-web.jpg', minutes: 12, thumb: 'linear-gradient(135deg,#A8E063,#56AB2F)',
     ingredients: [
       { name: '豆腐', have: true }, { name: '番茄', have: true }, { name: '西兰花', have: true }
     ],
     expiring: ['番茄'],
-    steps: ['食材切块备用。', '水开下豆腐与蔬菜。', '小火煮 8 分钟，加盐调味。'],
-    video: { title: '家常番茄豆腐汤做法', url: 'https://www.bilibili.com/video/BV1cfaQz2ENA', source: '哔哩哔哩' } }
+    video: { url: 'https://www.bilibili.com/video/BV1zJ411i7mF', title: '豆腐汤，用料和做法都很简单', author: '当和美食' },
+    steps: ['食材切块备用。', '水开下豆腐与蔬菜。', '小火煮 8 分钟，加盐调味。'] },
+  { id: 'rc-04', name: '番茄鸡蛋面', emoji: '🍜', image: './assets/recipes/tomato-noodle-web.jpg', minutes: 18, thumb: 'linear-gradient(135deg,#FFB86B,#FF7A59)',
+    ingredients: [
+      { name: '番茄', have: true }, { name: '鲜鸡蛋', have: true }, { name: '面条', have: false }
+    ],
+    expiring: ['番茄', '鲜鸡蛋'],
+    video: { url: 'https://www.bilibili.com/video/BV1F8411j7NA', title: '10分钟搞定的番茄鸡蛋面，汤汁浓郁', author: '娜娜美食记' },
+    steps: ['番茄切丁炒出汁，加水煮开。', '下面条煮至八分熟。', '淋入蛋液，加盐和葱花即可。'] },
+  { id: 'rc-05', name: '酸奶水果杯', emoji: '🥣', image: './assets/recipes/yogurt-web.jpg', minutes: 5, thumb: 'linear-gradient(135deg,#A8E063,#56AB2F)',
+    ingredients: [
+      { name: '原味酸奶', have: true }, { name: '蓝莓', have: true }, { name: '红苹果', have: true }
+    ],
+    expiring: ['原味酸奶', '蓝莓'],
+    video: { url: 'https://www.bilibili.com/video/BV1Dv411G7cz', title: '酸奶水果杯制作方法', author: '热爱生活的小熊老师' },
+    steps: ['苹果切小块，蓝莓洗净。', '杯中铺一层酸奶。', '摆上水果，再淋一层酸奶即可。'] },
+  { id: 'rc-06', name: '奶酪烤吐司', emoji: '🥪', image: './assets/recipes/cheese-toast-web.jpg', minutes: 10, thumb: 'linear-gradient(135deg,#F4C542,#D69A00)',
+    ingredients: [
+      { name: '吐司面包', have: true }, { name: '奶酪', have: true }, { name: '鲜鸡蛋', have: true }
+    ],
+    expiring: ['奶酪', '吐司面包'],
+    video: { url: 'https://www.bilibili.com/video/BV1RF411W7aV', title: '空气炸锅岩烧乳酪吐司', author: '奔三少女胖胖虎' },
+    steps: ['吐司片铺上奶酪。', '空气炸锅 180℃ 烤 5 分钟。', '夹层加煎蛋，对切装盘。'] },
+  { id: 'rc-07', name: '牛奶炖蛋', emoji: '🍮', image: './assets/recipes/custard-web.jpg', minutes: 20, thumb: 'linear-gradient(135deg,#FFE9A8,#F2B705)',
+    ingredients: [
+      { name: '全脂牛奶', have: true }, { name: '鲜鸡蛋', have: true }, { name: '糖', have: false }
+    ],
+    expiring: ['全脂牛奶', '鲜鸡蛋'],
+    video: { url: 'https://www.bilibili.com/video/BV1b54y1z7MC', title: '鲜奶炖蛋，超级香滑的一次成功做法', author: '阿李厨房' },
+    steps: ['鸡蛋加糖打散，倒入温牛奶搅匀。', '过筛后盖上保鲜膜。', '中小火蒸 15 分钟，静置 2 分钟即可。'] },
+  { id: 'rc-08', name: '香煎鸡胸时蔬', emoji: '🍗', image: './assets/recipes/chicken-web.jpg', minutes: 18, thumb: 'linear-gradient(135deg,#F2C0A8,#DFA78F)',
+    ingredients: [
+      { name: '鸡胸肉', have: true }, { name: '西兰花', have: true }, { name: '番茄', have: true }
+    ],
+    expiring: ['鸡胸肉'],
+    video: { url: 'https://www.bilibili.com/video/BV11J411T739', title: '四种方法做出完美鸡胸肉', author: '马蹄厨房' },
+    steps: ['鸡胸肉切片，用盐和黑胡椒腌制 10 分钟。', '西兰花焯水，番茄切块。', '平底锅煎熟鸡胸，放入时蔬翻炒均匀即可。'] }
 ];
 
 // 配菜菜品库：含菜名、常见食材与分类标签

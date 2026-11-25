@@ -58,7 +58,7 @@
     '豆腐': 'tofu', '🧈': 'tofu',
     '鸡胸肉': 'chicken', '鸡肉': 'chicken', '🍗': 'chicken', '鸡翅': 'chicken', '🍖': 'chicken',
     '西兰花': 'broccoli', '花椰菜': 'broccoli', '🥦': 'broccoli', '冷冻西兰花': 'frozenBroccoli',
-    '番茄': 'tomato', '西红柿': 'tomato', '🍅': 'tomato',
+    '番茄': 'tomato', '西红柿': 'tomato', '🍅': 'tomato', '面条': 'soup', '面': 'soup',
     '红苹果': 'apple', '苹果': 'apple', '🍎': 'apple',
     '胡萝卜': 'carrot', '🥕': 'carrot',
     '生菜': 'lettuce', '青菜': 'lettuce', '🥬': 'lettuce',
@@ -73,7 +73,7 @@
     '青椒': 'pepper', '🫑': 'pepper',
     '蒜': 'garlic', '🧄': 'garlic', '葱': 'scallion', '🌿': 'scallion', '姜': 'ginger', '🫚': 'ginger',
     '可乐': 'cola', '🥤': 'cola', '糖': 'sugar', '🍬': 'sugar', '米饭': 'rice', '🍚': 'rice', '燕麦': 'oat', '🌾': 'oat',
-    '🍳': 'pan', '🍲': 'soup', '🍜': 'soup', '🥗': 'salad', '🥪': 'sandwich', '🍽️': 'plate', '🍽': 'plate',
+    '🍳': 'pan', '🍲': 'soup', '🍜': 'soup', '🍮': 'soup', '🥗': 'salad', '🥪': 'sandwich', '🍽️': 'plate', '🍽': 'plate',
     '🧊': 'fridge', '❄️': 'snow', '❄': 'snow',
     '📷': 'camera', '✍️': 'pen', '✍': 'pen', '💬': 'chat', '🧺': 'basket', '📡': 'nfc', '✅': 'check', '✔': 'check', '🎤': 'mic', '🛒': 'cart'
   };

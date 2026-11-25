@@ -470,7 +470,7 @@
       ${r.ingredients.some(x => !x.have) ? `<button class="btn btn-primary btn-block" data-add-missing="${r.id}" style="margin-top:12px">把缺的食材加入补货清单</button>` : ''}
       <div class="sec-title">做法步骤</div>
       <div class="card">${r.steps.map((s, i) => `<div class="step-item"><span class="step-num">${i+1}</span><span>${esc(s)}</span></div>`).join('')}</div>
-      ${r.video ? `<div class="sec-title">视频教程 <span class="more">${esc(r.video.source)}</span></div>
+      ${r.video ? `<div class="sec-title">视频教程 <span class="more">${esc(r.video.author)}</span></div>
       <a class="video-card" href="${esc(r.video.url)}" target="_blank" rel="noopener noreferrer">
         <span class="vc-play">▶</span>
         <span class="grow"><b>${esc(r.video.title)}</b><small>点击前往哔哩哔哩观看完整做法</small></span>
