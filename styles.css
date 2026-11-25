@@ -394,6 +394,7 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .cart-item-title{font-size:14px;font-weight:600;line-height:1.35}
 .cart-item-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:9px}
 .cart-price{font-size:16px;color:#E4393C;font-weight:800}
+.cart-del{border:1px solid #F0C9C9;background:#FFF4F4;color:#D43838;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600}
 .cart-empty{text-align:center;color:var(--muted);font-size:13px;padding:36px 12px;background:#fff;border-radius:13px;border:1px solid var(--line)}
 .cart-recommend{background:#fff;border:1px solid var(--line);border-radius:13px;padding:12px;margin-bottom:12px}
 .cart-recommend h4{font-size:14px;margin-bottom:9px}

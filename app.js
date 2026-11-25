@@ -110,6 +110,7 @@
   };
   let lastPage = null;
   let recipesExpanded = false;
+  let cartManageMode = false;
 
   /* ==================== 开场动画 / 新手引导 / 每日提醒：状态与配置 ==================== */
   const introRoot = $('#intro-root');
@@ -162,12 +163,10 @@
         return sum + (p ? p.price : 9.9) * c.qty;
       }, 0);
       const allSelected = STATE.cart.length > 0 && chosen.length === STATE.cart.length;
-      dockRoot.innerHTML = `<div class="cart-bar checkout-dock">
-        <span class="r-check ${allSelected ? 'on' : ''}" data-action="cart-select-all">${allSelected ? '✓' : ''}</span>
-        <span>全选</span>
-        <div class="cart-total"><small>合计</small><b>¥${total.toFixed(2)}</b></div>
-        <button class="btn btn-primary" data-action="checkout">结算(${chosen.length})</button>
-      </div>`;
+      const selectAll = `<span class="r-check ${allSelected ? 'on' : ''}" data-action="cart-select-all">${allSelected ? '✓' : ''}</span><span>全选</span>`;
+      dockRoot.innerHTML = cartManageMode
+        ? `<div class="cart-bar checkout-dock">${selectAll}<button class="btn btn-primary" data-action="cart-remove-selected">删除所选(${chosen.length})</button></div>`
+        : `<div class="cart-bar checkout-dock">${selectAll}<div class="cart-total"><small>合计</small><b>¥${total.toFixed(2)}</b></div><button class="btn btn-primary" data-action="checkout">结算(${chosen.length})</button></div>`;
       return;
     }
     dockRoot.innerHTML = '';
@@ -192,6 +191,7 @@
 
   function renderApp() {
     const page = STATE.appPage;
+    if (page !== 'restock' && page !== 'cart' && cartManageMode) cartManageMode = false;
     const pageChanged = lastPage !== page;
     let html = '';
     if (page === 'nfc') html = pageNfc();
@@ -473,7 +473,7 @@
     const dupCount = rows.filter(r => r.dup && r.dup.hit).length;
     const recommendations = STATE.restock.filter(r => r.status === '待补');
     return `<div class="cart-page">
-      <div class="cart-page-title"><h2>购物车 <span>(${rows.length})</span></h2><button class="mini-btn" data-action="cart-manage">管理</button></div>
+      <div class="cart-page-title"><h2>购物车 <span>(${rows.length})</span></h2><button class="mini-btn" data-action="cart-manage">${cartManageMode ? '完成' : '管理'}</button></div>
       ${dupCount ? `<div class="cart-top-alert">🥬 有 <b>${dupCount}</b> 样冰箱里还有，记得先核对</div>` : ''}
       ${rows.length ? `
         ${rows.map(r => `<div class="cart-item restock-item">
@@ -484,7 +484,9 @@
             ${r.dup && r.dup.hit ? `<div class="cart-inline">冰箱里还有 ${r.dup.item.quantity}${esc(r.dup.item.unit)}</div>` : ''}
             <div class="cart-item-bottom">
               <span class="cart-price">¥${(r.p.price || 9.9).toFixed(2)}</span>
-              <div class="qty-ctrl"><button data-action="cart-qty" data-idx="${r.idx}" data-d="-1">−</button><span>${r.c.qty}</span><button data-action="cart-qty" data-idx="${r.idx}" data-d="1">+</button></div>
+              ${cartManageMode
+                ? `<button class="cart-del" data-action="cart-remove" data-idx="${r.idx}">删除</button>`
+                : `<div class="qty-ctrl"><button data-action="cart-qty" data-idx="${r.idx}" data-d="-1">−</button><span>${r.c.qty}</span><button data-action="cart-qty" data-idx="${r.idx}" data-d="1">+</button></div>`}
             </div>
           </div>
         </div>`).join('')}
@@ -2047,7 +2049,17 @@
         addToCart(sku, r.id); renderApp(); toast('已加入购物车'); return;
       }
       if (a === 'go-cart') { closeModal(); STATE.appPage = 'cart'; renderApp(); return; }
-      if (a === 'cart-manage') { toast('点商品左侧圆圈勾选，右下角结算'); return; }
+      if (a === 'cart-manage') { cartManageMode = !cartManageMode; renderApp(); return; }
+      if (a === 'cart-remove') {
+        STATE.cart.splice(+actionEl.dataset.idx, 1);
+        renderApp(); toast('已从购物车移除'); return;
+      }
+      if (a === 'cart-remove-selected') {
+        const chosen = STATE.cart.filter(c => c.selected !== false);
+        if (!chosen.length) { toast('请先勾选要删除的商品'); return; }
+        STATE.cart = STATE.cart.filter(c => !chosen.includes(c));
+        renderApp(); toast(`已删除 ${chosen.length} 样商品`); return;
+      }
     }
 
     const appRouteBtn = e.target.closest('[data-app-route]');
