@@ -253,7 +253,7 @@
       <div class="result-card">
         <div class="result-card-head"><div class="rc-icon" style="background:var(--yellow-soft)">${dishIcon('🍳')}</div><div><h4>今日食谱推荐</h4><p>先用掉快到期的食材</p></div></div>
         <div class="result-card-body">
-          ${RECIPES.slice(0,2).map(r => `<button class="mini-line" data-recipe="${r.id}" style="width:100%;text-align:left"><span>${dishIcon(r.emoji)}</span><span class="ml-name">${esc(r.name)} · ${r.minutes} 分钟</span><span style="color:var(--green-deep);font-size:13px">${r.expiring.length ? '快到期优先' : '查看'}</span></button>`).join('')}
+          ${RECIPES.slice(0,2).map(r => `<button class="mini-line" data-recipe="${r.id}" style="width:100%;text-align:left"><span>${dishIcon(r.emoji)}</span><span class="ml-name">${esc(r.name)} · ${r.minutes} 分钟</span><span style="color:var(--green-deep);font-size:15px">${r.expiring.length ? '快到期优先' : '查看'}</span></button>`).join('')}
         </div>
       </div>`;
   }
@@ -436,7 +436,7 @@
       ${(recipesExpanded ? RECIPES : RECIPES.slice(0, 3)).map(r => `<button class="result-card" data-recipe="${r.id}" style="width:100%;text-align:left">
         <div style="display:flex;gap:12px;padding:12px;align-items:center">
           <div class="recipe-thumb"><img src="${r.image}" alt="" loading="lazy" /></div>
-          <div class="grow"><div style="font-size:13px;font-weight:700">${esc(r.name)}</div>
+          <div class="grow"><div style="font-size:15px;font-weight:700">${esc(r.name)}</div>
             <div class="muted" style="margin-top:3px">⏱ ${r.minutes} 分钟</div>
           </div><span style="color:var(--muted)">›</span>
         </div></button>`).join('')}
@@ -499,7 +499,7 @@
   function pageProduct() {
     const p = PRODUCTS.find(x => x.sku === STATE.productSku) || PRODUCTS[0];
     const dup = checkDuplicate(p.sku);
-    return `<button class="muted" data-go="restock" style="margin-bottom:10px;font-size:13px">‹ 返回</button>
+    return `<button class="muted" data-go="restock" style="margin-bottom:10px;font-size:15px">‹ 返回</button>
       <div class="product-hero">${p.emoji}</div>
       <div class="product-title">${esc(p.name)}</div>
       <div class="price">¥${p.price.toFixed(2)}</div>
@@ -576,7 +576,7 @@
             <span>还能放</span><span><b style="color:var(--green-deep)">${i.remainingDays} 天</b>，暂时不用补</span>
           </div>
         </div>
-        ${dupQueue.length >= 1 ? `<div class="muted" style="margin-bottom:10px;font-size:13px">还有 ${dupQueue.length} 项待确认</div>` : ''}
+        ${dupQueue.length >= 1 ? `<div class="muted" style="margin-bottom:10px;font-size:15px">还有 ${dupQueue.length} 项待确认</div>` : ''}
         <div class="modal-actions">
           <button class="btn btn-ghost" data-action="dup-skip" data-sku="${sku}" data-rid="${fromRestockId || ''}">先不买了</button>
           <button class="btn btn-primary" data-action="dup-buy" data-sku="${sku}" data-rid="${fromRestockId || ''}">仍然购买</button>
@@ -1448,7 +1448,7 @@
       const files = $('#af-photos');
       if (files) files.addEventListener('change', () => {
         const pv = $('#ap-preview'); pv.style.display = 'block';
-        pv.innerHTML = '<div style="font-size:13px;color:var(--muted);margin-bottom:6px">🔍 照片识别到 3 样食材：</div>' +
+        pv.innerHTML = '<div style="font-size:15px;color:var(--muted);margin-bottom:6px">🔍 照片识别到 3 样食材：</div>' +
           [['鲜鸡蛋','6 枚','冷藏室中层'],['全脂牛奶','1 盒','冷藏室上层'],['番茄','4 个','果蔬抽屉']].map(x => `<div class="ap-row"><span>🥗</span><span>${x[0]}</span><b>${x[1]}</b></div>`).join('');
         pv.dataset.photoBatch = '1';
       });
