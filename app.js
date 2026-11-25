@@ -1477,11 +1477,15 @@
   };
 
   let visionModelPromise = null;
+  // 模型权重约 17MB：优先走 jsDelivr CDN（国内速度远快于 GitHub Pages），失败再回退站点本地
+  const VISION_MODEL_LOCAL = './assets/model/model.json';
+  const VISION_MODEL_CDN = 'https://cdn.jsdelivr.net/gh/Tartalr818339/fridge3.0@main/assets/model/model.json';
   function loadVisionModel() {
     if (!window.tf || !window.mobilenet) return Promise.reject(new Error('识别引擎未加载'));
     if (!visionModelPromise) {
       visionModelPromise = window.mobilenet
-        .load({ version: 1, alpha: 1.0, modelUrl: './assets/model/model.json' })
+        .load({ version: 1, alpha: 1.0, modelUrl: VISION_MODEL_CDN })
+        .catch(() => window.mobilenet.load({ version: 1, alpha: 1.0, modelUrl: VISION_MODEL_LOCAL }))
         .catch(e => { visionModelPromise = null; throw e; });
     }
     return visionModelPromise;
@@ -1490,7 +1494,7 @@
   async function recognizePhotos(files) {
     const pv = $('#ap-preview'); if (!pv) return;
     pv.style.display = 'block';
-    pv.innerHTML = '<div style="font-size:15px;color:var(--muted)">🔍 正在加载识别模型…首次可能需几秒</div>';
+    pv.innerHTML = '<div style="font-size:15px;color:var(--muted)">🔍 正在准备识别模型…首次使用需下载约 17MB，请稍候（之后会快很多）</div>';
     delete pv.dataset.photoNames;
     const fileList = Array.from(files || []).filter(f => f && /^image\//.test(f.type));
     if (!fileList.length) { pv.innerHTML = ''; toast('请选择图片'); return; }
@@ -2221,4 +2225,7 @@
   renderApp();
   // 页面加载时序：开场动画 → 新手教程 → 临期食材提醒（每次刷新都重播）
   initExperienceSequence();
+  // 后台空闲时预加载拍照识别模型，用户点「拍照识别」时即可秒出结果
+  if (window.requestIdleCallback) requestIdleCallback(() => { loadVisionModel().catch(() => {}); }, { timeout: 4000 });
+  else setTimeout(() => { loadVisionModel().catch(() => {}); }, 3000);
 })();
