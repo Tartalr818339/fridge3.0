@@ -513,6 +513,7 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .input-with-mic input{flex:1;min-width:0}
 .mic-btn{flex:none;width:44px;height:44px;border-radius:12px;background:var(--green-soft);color:var(--green-deep);font-size:18px;display:grid;place-items:center}
 .mic-btn.listening{background:var(--red-soft);color:var(--red-deep);animation:pulse 1s infinite}
+.voice-hint{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.4}
 .ai-input-row .mic-btn{width:44px;height:44px}
 .batch-entry p{font-size:13px;color:var(--ink-2);line-height:1.6;margin-bottom:9px}
 .batch-entry textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-size:14px;line-height:1.7;background:var(--paper);color:var(--ink);outline:none;resize:vertical}

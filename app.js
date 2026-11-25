@@ -33,6 +33,7 @@
   const toastRoot = $('#toast-root');
   const scrollRail = $('#scroll-rail');
   const dockRoot = $('#dock-root');
+  const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
 
   // 分区图标与冰箱显示屏保持一致
   function layerIcon(layer) {
@@ -1352,8 +1353,14 @@
     $$('.mic-btn').forEach(b => b.classList.remove('listening'));
   }
   function startVoice(type) {
+    if (isWeChat) {
+      const input = type === 'text' ? $('#ai-food-input') : $('#af-name');
+      if (input) { input.focus(); input.click(); }
+      toast('微信里请点输入框，用键盘上的话筒说话');
+      return;
+    }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { toast('当前浏览器不支持语音识别，请用 Chrome 或 Edge 打开'); return; }
+    if (!SR) { toast('当前浏览器不支持语音识别，请用 Chrome/Edge 或微信输入法话筒'); return; }
     stopVoice();
     const rec = new SR();
     rec.lang = 'zh-CN'; rec.interimResults = true; rec.maxAlternatives = 1;
@@ -1410,6 +1417,7 @@
       return `
         <div class="add-field"><label>食材名称</label>
           <div class="input-with-mic"><input id="af-name" placeholder="如：鸡蛋、牛奶、西兰花" /><button class="mic-btn" data-action="voice-manual" aria-label="语音输入">${dishIcon('🎤')}</button></div>
+          ${isWeChat ? '<div class="voice-hint">微信里点输入框，用键盘上的话筒说话</div>' : ''}
         </div>
         <div class="add-field"><label>所在层</label>
           <div class="layer-picker" id="af-layer" data-layer="${esc(defaultLayer)}">
