@@ -32,7 +32,6 @@
   const modalRoot = $('#modal-root');
   const toastRoot = $('#toast-root');
   const scrollRail = $('#scroll-rail');
-  const scrollCue = $('#scroll-cue');
   const dockRoot = $('#dock-root');
 
   // 分区图标与冰箱显示屏保持一致
@@ -177,24 +176,15 @@
   }
 
   function updateScrollHint() {
-    if (!scrollRail || !scrollCue) return;
+    if (!scrollRail) return;
     const max = Math.max(0, appEl.scrollHeight - appEl.clientHeight);
     const scrollable = max > 72;
     scrollRail.classList.toggle('active', scrollable);
-    if (!scrollable) {
-      scrollCue.classList.add('hidden');
-      return;
-    }
+    if (!scrollable) return;
     const thumb = scrollRail.firstElementChild;
     const thumbPct = Math.max(12, Math.min(60, appEl.clientHeight / appEl.scrollHeight * 100));
     thumb.style.height = `${thumbPct}%`;
     thumb.style.top = `${(appEl.scrollTop / max) * (100 - thumbPct)}%`;
-    if (max <= 120 || STATE.appPage !== 'home') {
-      scrollCue.classList.add('hidden');
-      return;
-    }
-    scrollCue.textContent = '下滑查看冰箱分区 ↓';
-    scrollCue.classList.toggle('hidden', appEl.scrollTop > 36 || appEl.scrollTop >= max - 8);
   }
 
   appEl.addEventListener('scroll', () => {

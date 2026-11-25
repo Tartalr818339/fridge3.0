@@ -59,9 +59,6 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .scroll-rail{position:absolute;right:5px;top:68px;bottom:80px;width:4px;border-radius:999px;background:rgba(18,61,40,.10);opacity:0;pointer-events:none;z-index:6;transition:opacity .25s ease}
 .scroll-rail.active{opacity:1}
 .scroll-rail span{position:absolute;left:0;width:100%;min-height:28px;border-radius:999px;background:linear-gradient(180deg,#1DB954,#0E7C3A);box-shadow:0 2px 8px rgba(14,124,58,.35);transition:top .12s linear,height .2s ease}
-.scroll-cue{position:absolute;left:50%;bottom:82px;transform:translateX(-50%);z-index:6;display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.94);border:1px solid #BED9C8;color:var(--green-deep);font-size:12px;font-weight:800;white-space:nowrap;box-shadow:0 6px 18px rgba(18,61,40,.16);pointer-events:none;animation:cueBob 1.6s ease-in-out infinite;transition:opacity .25s ease,transform .25s ease}
-.scroll-cue.hidden{opacity:0;transform:translate(-50%,8px)}
-@keyframes cueBob{0%,100%{margin-bottom:0}50%{margin-bottom:4px}}
 .app-topbar{position:absolute;top:0;left:0;right:0;height:58px;z-index:7;display:flex;align-items:center;gap:10px;padding:0 18px;pointer-events:none;color:var(--ink);background:rgba(255,255,255,.58);backdrop-filter:blur(8px) saturate(130%);-webkit-backdrop-filter:blur(8px) saturate(130%);border-bottom:1px solid rgba(255,255,255,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.6);transition:background .28s ease,box-shadow .28s ease,backdrop-filter .28s ease}
 .app-topbar.scrolled{background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.78));backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border-bottom-color:rgba(255,255,255,.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 8px 26px rgba(18,61,40,.12)}
 .tb-back{pointer-events:auto;flex:none;min-height:36px;padding:5px 12px 5px 8px;border-radius:999px;background:#fff;border:1px solid #C9DDCF;color:var(--green-deep);font-size:13px;font-weight:800;box-shadow:0 2px 8px rgba(18,61,40,.10)}
@@ -652,7 +649,6 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
   .app-topbar.has-back .tb-title{max-width:100px}
   .dock-root{bottom:calc(78px + env(safe-area-inset-bottom, 0px));padding:0 12px}
   .scroll-rail{top:calc(66px + env(safe-area-inset-top, 0px));bottom:calc(88px + env(safe-area-inset-bottom, 0px))}
-  .scroll-cue{bottom:calc(88px + env(safe-area-inset-bottom, 0px))}
   .model-action-card{flex-direction:row;align-items:center;gap:8px;padding:12px}
   .mac-ico{width:44px;height:44px;border-radius:13px}
   .mac-ico svg{width:24px;height:24px}
