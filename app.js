@@ -463,7 +463,7 @@
       ${r.video ? `<div class="sec-title">视频教程 <span class="more">${esc(r.video.author)}</span></div>
       <a class="video-card" href="${esc(r.video.url)}" target="_blank" rel="noopener noreferrer">
         <span class="vc-play">▶</span>
-        <span class="grow"><b>${esc(r.video.title)}</b><small>点击前往哔哩哔哩观看完整做法</small></span>
+        <span class="grow"><b>${esc(r.video.title)}</b><small>点击观看完整做法</small></span>
         <span class="vc-go">观看 ›</span>
       </a>` : ''}`;
   }
@@ -804,6 +804,101 @@
       tags: [], ingredients, steps: guessDishSteps(q), custom: true };
   }
 
+  // 联网菜谱 API：TheMealDB（公开免费、支持跨域），把中文口语转成英文检索词
+  const API_BASE = 'https://www.themealdb.com/api/json/v1/1/search.php';
+  const API_TERM_RULES = [
+    [/番茄.{0,3}蛋|西红柿.{0,3}蛋|番茄炒蛋/, 'tomato egg'],
+    [/奶油蘑菇汤|蘑菇汤/, 'mushroom soup'],
+    [/可乐鸡翅|鸡翅/, 'chicken wings'],
+    [/鸡胸/, 'chicken breast'], [/三文鱼|鲑鱼/, 'salmon'],
+    [/牛肉|牛腩/, 'beef'], [/虾|海鲜/, 'shrimp'], [/豆腐/, 'tofu'],
+    [/蘑菇|菌菇/, 'mushroom'], [/土豆|马铃薯/, 'potato'],
+    [/西兰花|花椰菜/, 'broccoli'], [/胡萝卜/, 'carrot'],
+    [/减脂|沙拉|轻食/, 'salad'], [/面条|拉面|米线/, 'noodle'],
+    [/汤|炖|煲/, 'soup'], [/酸奶/, 'yogurt'], [/牛奶/, 'milk'],
+    [/吐司|面包/, 'bread'], [/苹果/, 'apple'], [/鸡蛋|蛋/, 'egg'],
+    [/鸡/, 'chicken'], [/鱼/, 'fish'], [/蔬菜|青菜|时蔬/, 'vegetable']
+  ];
+  const API_ING_CN = {
+    'egg': '鲜鸡蛋', 'eggs': '鲜鸡蛋', 'tomato': '番茄', 'tomatoes': '番茄',
+    'salmon': '三文鱼', 'chicken breast': '鸡胸肉', 'chicken breasts': '鸡胸肉', 'chicken': '鸡胸肉',
+    'tofu': '豆腐', 'broccoli': '西兰花', 'carrot': '胡萝卜', 'carrots': '胡萝卜',
+    'onion': '洋葱', 'onions': '洋葱', 'mushroom': '蘑菇', 'mushrooms': '蘑菇',
+    'potato': '土豆', 'potatoes': '土豆', 'noodles': '面条', 'rice noodles': '面条',
+    'spaghetti': '面条', 'milk': '全脂牛奶', 'yogurt': '原味酸奶',
+    'cheese': '奶酪', 'cheddar': '奶酪', 'bread': '吐司面包', 'toast': '吐司面包',
+    'apple': '红苹果', 'apples': '红苹果', 'blueberries': '蓝莓',
+    'lemon': '柠檬', 'lime': '柠檬', 'shrimp': '虾', 'prawns': '虾', 'beef': '牛肉',
+    'garlic': '大蒜', 'ginger': '生姜', 'soy sauce': '生抽', 'butter': '黄油',
+    'olive oil': '橄榄油', 'salt': '盐', 'sugar': '糖'
+  };
+
+  function queryToApiTerm(q) {
+    const s = String(q || '').trim().replace(/^(我想吃|我想要|我想|想吃|来一份|来个|我要|帮我做|帮我|做|吃)/, '').trim();
+    if (/^[a-zA-Z\s]+$/.test(s)) return s;
+    const picked = [];
+    API_TERM_RULES.forEach(([re, term]) => {
+      if (re.test(s) && !picked.some(p => p.includes(term) || term.includes(p))) picked.push(term);
+    });
+    return picked.slice(0, 3).join(' ');
+  }
+
+  function mealToRecipe(m, query) {
+    const meta = guessDishMeta(query);
+    const ingredients = [];
+    for (let i = 1; i <= 20; i++) {
+      const raw = m['strIngredient' + i];
+      if (!raw || !String(raw).trim()) continue;
+      const name = String(raw).trim();
+      ingredients.push(API_ING_CN[name.toLowerCase()] || name);
+    }
+    const steps = String(m.strInstructions || '').split(/\r?\n|\n/).map(s => s.trim()).filter(Boolean).slice(0, 6);
+    if (!steps.length) steps = ['准备好全部食材。', '按照菜谱说明烹饪调味。', '装盘即可享用。'];
+    const origin = m.strMeal || query;
+    return {
+      id: 'api-' + (m.idMeal || Date.now()),
+      name: String(query || origin).trim(),
+      apiName: origin,
+      emoji: meta.emoji, minutes: meta.minutes,
+      ingredients, expiring: [], steps,
+      image: m.strMealThumb || '',
+      video: m.strYoutube ? { url: m.strYoutube, title: origin + ' 做法教程', author: 'YouTube' } : null,
+      api: true
+    };
+  }
+
+  async function fetchApiRecipe(query) {
+    const term = queryToApiTerm(query);
+    if (!term) return null;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 9000);
+    try {
+      const search = async (word) => {
+        const res = await fetch(`${API_BASE}?s=${encodeURIComponent(word)}`, { signal: ctrl.signal });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return Array.isArray(data.meals) ? data.meals : [];
+      };
+      let meals = await search(term);
+      if (!meals.length && term.includes(' ')) meals = await search(term.split(' ')[0]);
+      if (!meals.length) return null;
+      return mealToRecipe(meals.find(x => x.strYoutube && x.strMealThumb) || meals[0], query);
+    } catch (e) {
+      return null;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  function showAiLoading(query) {
+    modalRoot.innerHTML = `<div class="modal-overlay" data-action="close-modal">
+      <div class="modal-card ai-modal" data-stop="1">
+        <div class="ai-modal-head"><span class="ai-orb">🍳</span><div class="grow"><h3>正在找做法</h3><p>「${esc(query)}」· 联网匹配菜谱和教学视频</p></div></div>
+        <div class="ai-loading"><span class="ai-spinner"></span><span>正在对照冰箱里的食材…</span></div>
+      </div>
+    </div>`;
+  }
+
   function aiResolveRecipe(query) {
     // 去掉口语前缀，避免「我想吃鱼」被「我想/吃」干扰而匹配错菜
     const q = String(query || '').trim().replace(/^(我想吃|我想要|我想|想吃|来一份|来个|我要|吃|做)/, '').trim();
@@ -853,15 +948,18 @@
           <button class="ai-chip" data-action="ai-quick" data-q="奶油蘑菇汤">🍲 奶油蘑菇汤</button>
           <button class="ai-chip" data-action="ai-quick" data-q="减脂餐">🥗 减脂餐</button>
         </div>
-        <div class="ai-footnote">想吃什么由你决定，冰箱食材只用来帮你省事</div>
+        <div class="ai-footnote">联网识别你想做的菜，自动找做法和教学视频，再对照冰箱算要买的食材</div>
       </div>
     </div>`;
     setTimeout(() => { const el = $('#ai-input'); if (el) el.focus(); }, 50);
   }
 
-  function renderAiResult(query) {
-    const { recipe, mode } = aiResolveRecipe(query);
-    if (!recipe) { toast('先说说想吃什么菜'); const el = $('#ai-input'); if (el) el.focus(); return; }
+  async function renderAiResult(query) {
+    const q = String(query || '').trim();
+    if (!q) { toast('先说说想吃什么菜'); const el = $('#ai-input'); if (el) el.focus(); return; }
+    showAiLoading(q);
+    const apiRecipe = await fetchApiRecipe(q);
+    const { recipe, mode } = apiRecipe ? { recipe: apiRecipe, mode: 'api' } : aiResolveRecipe(q);
     STATE.aiDish = recipe;
     const { have, need, expiringInRecipe } = aiAnalyzeRecipe(recipe);
     const chipHtml = have.length
@@ -874,7 +972,8 @@
       ? `<div class="ai-tip">⏰ 正好能用掉快到期的：<b>${expiringInRecipe.map(esc).join('、')}</b>，今天做正合适</div>` : '';
     const customTip = mode === 'custom' && !have.length && !need.length
       ? '<div class="ai-tip">这道菜不在常用菜库里，先按家常步骤整理好了；要买什么可以随手加到补货清单。</div>' : '';
-    const modeText = mode === 'custom' ? '按你想的菜整理好了，再看看冰箱里有什么'
+    const modeText = mode === 'api' ? '联网找到做法，已对照你的冰箱'
+      : mode === 'custom' ? '按你想的菜整理好了，再看看冰箱里有什么'
       : mode === 'keyword' ? '按你说的口味找到这道菜' : '按菜名对照了冰箱里的食材';
     modalRoot.innerHTML = `<div class="modal-overlay" data-action="close-modal">
       <div class="modal-card ai-modal ai-result" data-stop="1">
@@ -892,6 +991,7 @@
           ${need.length ? `<button class="btn btn-primary grow" data-action="ai-add-restock" data-recipe="${recipe.id}">把需补食材加入补货清单</button>` : ''}
           <button class="btn btn-ghost grow" data-action="ai-view-steps">看详细做法</button>
         </div>
+        ${recipe.video ? `<a class="btn btn-ghost btn-block" href="${esc(recipe.video.url)}" target="_blank" rel="noopener noreferrer" style="margin-top:8px">▶ 看教学视频 · ${esc(recipe.video.author)}</a>` : ''}
         <button class="ai-change" data-action="ai-change">换个菜名</button>
       </div>
     </div>`;
@@ -930,6 +1030,9 @@
         <div class="pair-guide">
           ${r.steps.map((s, i) => `<div class="pg-step"><span class="pg-num">${i+1}</span><span>${esc(s)}</span></div>`).join('')}
         </div>
+        ${r.video ? `<a class="video-card" href="${esc(r.video.url)}" target="_blank" rel="noopener noreferrer" style="margin-top:12px">
+          <span class="vc-play">▶</span><span class="grow"><b>${esc(r.video.title)}</b><small>点击观看完整做法</small></span><span class="vc-go">观看 ›</span>
+        </a>` : ''}
         <div class="modal-actions"><button class="btn btn-primary btn-block" data-action="close-app-layer">知道了</button></div>
       </div>
     </div>`;

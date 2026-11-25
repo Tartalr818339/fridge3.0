@@ -282,6 +282,9 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .ai-chip{font-size:13px;padding:7px 11px;border-radius:999px;background:var(--green-soft);color:var(--green-deep);font-weight:600}
 .ai-chip:active{background:#D5F0DF}
 .ai-footnote{font-size:13px;color:var(--muted);line-height:1.5;text-align:center}
+.ai-loading{display:flex;align-items:center;justify-content:center;gap:12px;padding:26px 8px;color:var(--muted);font-size:13px}
+.ai-spinner{width:20px;height:20px;border-radius:50%;border:2px solid var(--green-soft);border-top-color:var(--green);animation:aiSpin .8s linear infinite}
+@keyframes aiSpin{to{transform:rotate(360deg)}}
 .ai-dish{display:flex;gap:12px;align-items:center;background:linear-gradient(120deg,#E8F7EE,#F4FBF6);border-radius:13px;padding:11px 13px;margin-bottom:12px}
 .ai-dish-emoji{font-size:32px}
 .ai-dish h4{font-size:15px;color:var(--green-deep)}
