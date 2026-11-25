@@ -67,21 +67,21 @@ const RESTOCK_ITEMS = [
 ];
 
 const RECIPES = [
-  { id: 'rc-01', name: '番茄炒蛋', emoji: '🍳', image: './assets/recipes/tomato-eggs.png', minutes: 15, thumb: 'linear-gradient(135deg,#FFB86B,#FF7A59)',
+  { id: 'rc-01', name: '番茄炒蛋', emoji: '🍳', image: './assets/recipes/tomato-eggs.png?v=59', minutes: 15, thumb: 'linear-gradient(135deg,#FFB86B,#FF7A59)',
     ingredients: [
       { name: '鲜鸡蛋', have: true }, { name: '番茄', have: true }, { name: '葱', have: false }
     ],
     expiring: ['番茄'],
     steps: ['番茄切块、鸡蛋打散备用。', '热油炒蛋至凝固盛出。', '下番茄炒出汁，回锅鸡蛋调味即成。'],
     video: { title: '小高姐番茄炒蛋技巧', url: 'https://www.bilibili.com/video/BV1PW411T7YB', source: '哔哩哔哩' } },
-  { id: 'rc-02', name: '香煎三文鱼', emoji: '🐟', image: './assets/recipes/salmon.png', minutes: 20, thumb: 'linear-gradient(135deg,#FF9A8B,#FF6A88)',
+  { id: 'rc-02', name: '香煎三文鱼', emoji: '🐟', image: './assets/recipes/salmon.png?v=59', minutes: 20, thumb: 'linear-gradient(135deg,#FF9A8B,#FF6A88)',
     ingredients: [
       { name: '三文鱼', have: true }, { name: '西兰花', have: true }, { name: '柠檬', have: false }
     ],
     expiring: ['三文鱼'],
     steps: ['三文鱼撒盐腌制 10 分钟。', '西兰花焯水备用。', '两面煎至金黄，挤柠檬汁装盘。'],
     video: { title: '一个技巧煎出酥脆香煎三文鱼', url: 'https://www.bilibili.com/video/BV1oS421R7T5', source: '哔哩哔哩' } },
-  { id: 'rc-03', name: '豆腐蔬菜汤', emoji: '🍲', image: './assets/recipes/tofu-soup.png', minutes: 12, thumb: 'linear-gradient(135deg,#A8E063,#56AB2F)',
+  { id: 'rc-03', name: '豆腐蔬菜汤', emoji: '🍲', image: './assets/recipes/tofu-soup.png?v=59', minutes: 12, thumb: 'linear-gradient(135deg,#A8E063,#56AB2F)',
     ingredients: [
       { name: '豆腐', have: true }, { name: '番茄', have: true }, { name: '西兰花', have: true }
     ],
