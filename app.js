@@ -350,7 +350,7 @@
     const soonItems = ITEMS.filter(i => i.remainingDays >= 0 && i.remainingDays <= 3);
     const sel = STATE.expiryDay;
     const dayItems = expiryItems();
-    const shown = dayItems.slice(0, 2);
+    const shown = dayItems.slice(0, 4);
     return `<div class="alert-banner">
         <span class="ab-ico">⏰</span>
         <div class="grow"><h4>这些食材快到期了（${soonItems.length} 件）</h4>
@@ -363,7 +363,7 @@
               <span class="em-ico">${i.icon}</span><span class="em-name">${esc(i.name)}</span>
               <span class="em-meta">${i.remainingDays === 0 ? '已过期' : '还剩 ' + i.remainingDays + ' 天'} · ${i.quantity}${esc(i.unit)}</span>${priorityTag(i)}
             </div>`).join('') : '<div class="expiry-none">这个范围内没有快到期的食材</div>'}
-            ${dayItems.length > 2 ? `<button class="expiry-more" data-action="expiry-all">查看全部 ${dayItems.length} 件 ›</button>` : ''}
+            ${dayItems.length > 4 ? `<button class="expiry-more" data-action="expiry-all">查看全部 ${dayItems.length} 件 ›</button>` : ''}
           </div>
         </div>
       </div>`;
@@ -374,25 +374,26 @@
       ${fridgeZoneView()}`;
   }
 
+  function homeRecipeModule() {
+    return `<div class="sec-title">今日食谱 <button class="more" data-go="recipes">全部食谱 ›</button></div>
+      <div class="home-recipe-list">${RECIPES.slice(0, 3).map(r => `<button class="home-recipe" data-recipe="${r.id}">
+        <span class="hr-emoji" style="background:${r.thumb}">${r.emoji}</span>
+        <span class="grow"><b>${esc(r.name)}</b><small>⏱ ${r.minutes} 分钟 · ${r.ingredients.filter(x => x.have).length}/${r.ingredients.length} 食材已有</small></span>
+        <span class="hr-go">›</span>
+      </button>`).join('')}</div>`;
+  }
+
   function pageHome() {
-    const soonItems = ITEMS.filter(i => i.remainingDays >= 0 && i.remainingDays <= 3);
-    const soon = soonItems.length;
-    const minDays = soon ? Math.min(...soonItems.map(i => i.remainingDays)) : 99;
-    const dueTone = !soon ? 'empty' : minDays <= 1 ? 'red' : minDays === 2 ? 'amber' : 'green';
     const module = STATE.homeModule || 'expiry';
-    const renderModule = { expiry: homeExpiryModule, zones: homeZoneModule }[module] || homeExpiryModule;
+    const renderModule = { expiry: homeExpiryModule, zones: homeZoneModule, recipes: homeRecipeModule }[module] || homeExpiryModule;
     return `<div class="app-hero">
         <h2>早上好，今天想吃些什么</h2>
-        <p>按模块查看，今天的重点一眼看清</p>
-      </div>
-      <div class="home-stats">
-        <button class="home-stat" data-go="fridge"><b>${ITEMS.length}</b><span>食材总数</span></button>
-        <button class="home-stat due-${dueTone}" data-action="home-module" data-module="expiry"><b>${soon}</b><span>临期食材</span></button>
-        <button class="home-stat recipe" data-go="recipes"><b>${RECIPES.length}</b><span>今日食谱</span></button>
+        <p>${ITEMS.length} 件食材 · ${currentLayers().length} 个分区</p>
       </div>
       <div class="module-switch">
         <button class="module-tab ${module === 'expiry' ? 'active' : ''}" data-action="home-module" data-module="expiry">⏰ 临期</button>
         <button class="module-tab ${module === 'zones' ? 'active' : ''}" data-action="home-module" data-module="zones">🧊 分区</button>
+        <button class="module-tab ${module === 'recipes' ? 'active' : ''}" data-action="home-module" data-module="recipes">🍳 今日食谱</button>
       </div>
       <div class="home-module">${renderModule()}</div>`;
   }
@@ -570,6 +571,7 @@
 
   /* ==================== 重复购买提醒弹窗 ==================== */
   let dupQueue = [];
+  let pendingGoCart = false;
   function showDuplicateModal(sku, fromRestockId) {
     const dup = checkDuplicate(sku);
     if (!dup || !dup.hit) return false;
@@ -1396,7 +1398,12 @@
     }
   }
   function processDupQueue() {
-    if (!dupQueue.length) { renderApp(); toast('已加入购物车'); return; }
+    if (!dupQueue.length) {
+      const goCart = pendingGoCart;
+      pendingGoCart = false;
+      if (goCart) STATE.appPage = 'cart';
+      renderApp(); toast('已加入购物车'); return;
+    }
     const next = dupQueue.shift();
     if (!showDuplicateModal(next.sku, next.rid)) processDupQueue();
   }
@@ -1817,6 +1824,7 @@
       if (a === 'restock-add-cart') {
         const checkedIds = Array.from(STATE.checked);
         if (!checkedIds.length) { toast('请先勾选补货项'); return; }
+        pendingGoCart = true;
         dupQueue = [];
         checkedIds.forEach(id => {
           const r = STATE.restock.find(x => x.id === id);
@@ -1847,7 +1855,12 @@
         }
         closeModal();
         if (dupQueue.length) processDupQueue();
-        else { renderApp(); toast(a === 'dup-buy' ? '已加入购物车' : '已移出购物车，标记暂不补货'); }
+        else {
+          const goCart = pendingGoCart && a === 'dup-buy';
+          pendingGoCart = false;
+          if (goCart) STATE.appPage = 'cart';
+          renderApp(); toast(a === 'dup-buy' ? '已加入购物车' : '已移出购物车，标记暂不补货');
+        }
         return;
       }
       if (a === 'cart-qty') {
