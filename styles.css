@@ -301,8 +301,8 @@ h1,h2,h3,h4,h5{font-weight:700;letter-spacing:-.01em}
 .ai-none{font-size:15px;color:var(--muted)}
 .ai-summary{font-size:15px;color:var(--green-deep);font-weight:700;background:var(--green-soft);border-radius:10px;padding:9px 11px;text-align:center;margin-bottom:12px}
 .ai-actions{display:flex;flex-direction:column;gap:8px}
-.ai-actions .btn{width:100%;min-width:0;white-space:normal;text-align:center}
-.ai-result > .btn.btn-block{width:100%;margin-top:8px}
+.ai-actions .btn{display:block;width:100%;min-width:0;white-space:normal;text-align:center}
+.ai-result > .btn.btn-block{display:block;width:100%;margin-top:8px;text-align:center}
 .ai-change{display:block;margin:12px auto 0;border:0;background:none;color:var(--green-deep);font-size:15px;font-weight:700;min-height:34px;padding:4px 12px}
 .more-btn{display:block;margin:10px auto;border:0;background:none;color:var(--green-deep);font-size:15px;font-weight:700;min-height:34px;padding:4px 12px}
 /* 下单成功弹窗 */

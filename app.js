@@ -1051,8 +1051,8 @@
         <div class="ai-actions">
           ${need.length ? `<button class="btn btn-primary grow" data-action="go-cart">已加入购物车 · 去结算</button>` : ''}
           <button class="btn btn-ghost grow" data-action="ai-view-steps">看详细做法</button>
+          ${recipe.video ? `<a class="btn btn-ghost grow" href="${esc(recipe.video.url)}" target="_blank" rel="noopener noreferrer">▶ 看教学视频 · ${esc(recipe.video.author)}</a>` : ''}
         </div>
-        ${recipe.video ? `<a class="btn btn-ghost btn-block" href="${esc(recipe.video.url)}" target="_blank" rel="noopener noreferrer" style="margin-top:8px">▶ 看教学视频 · ${esc(recipe.video.author)}</a>` : ''}
         <button class="ai-change" data-action="ai-change">换个菜名</button>
       </div>
     </div>`;
